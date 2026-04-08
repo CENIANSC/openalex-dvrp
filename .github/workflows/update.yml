@@ -1,19 +1,20 @@
-name: Actualización mensual DVRP
+name: update-openalex
 
 on:
+  workflow_dispatch:   # permite ejecutarlo manualmente
   schedule:
-    - cron: "0 0 1 * *"  # cada mes, día 1 a medianoche
-  workflow_dispatch:
+    - cron: '0 0 1 * *'   # se ejecuta el día 1 de cada mes a medianoche
 
 jobs:
-  update-openalex:
+  build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configurar Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
@@ -22,12 +23,17 @@ jobs:
 
       - name: Ejecutar script de actualización
         run: python scripts/openalex_update.py
-        
-      - name: Guardar resultados en el repositorio
-        run: |
-         git config --global user.name "github-actions"
-         git config --global user.email "github-actions@github.com"
-         git add db/articulos_dvrp.db articulos.csv || true
-         git commit -m "Actualización automática de base de datos y CSV" || true
-         git push
+
+      - name: Subir base de datos como artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: articulos_db
+          path: db/articulos_dvrp.db
+
+      - name: Subir CSV como artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: articulos_csv
+          path: articulos.csv
+
 
