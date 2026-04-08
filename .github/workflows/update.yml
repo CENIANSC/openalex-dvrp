@@ -33,5 +33,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: articulos_csv
-          path: articulos.csv
+          path: db/articulos.csv
 
