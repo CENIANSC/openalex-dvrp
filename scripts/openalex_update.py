@@ -1,82 +1,77 @@
 import requests
 import sqlite3
-import smtplib
-from email.mime.text import MIMEText
-import os
 
-# --- Configuración ---
-QUERY = "Dynamic Vehicle Routing Problem OR DVRP"
-DB_PATH = "db/articulos_dvrp.db"
+# Conexión a la base de datos SQLite
+conn = sqlite3.connect("db/articulos_dvrp.db")
+cur = conn.cursor()
 
-EMAIL_USER = os.getenv("EMAIL_USER")
-EMAIL_PASS = os.getenv("EMAIL_PASS")
-EMAIL_TO = "destinatario@example.com"
+# Crear tabla con más campos de OpenAlex
+cur.execute("""
+CREATE TABLE IF NOT EXISTS articulos (
+    id TEXT PRIMARY KEY,
+    doi TEXT,
+    title TEXT,
+    publication_year INTEGER,
+    publication_date TEXT,
+    type TEXT,
+    cited_by_count INTEGER,
+    is_retracted BOOLEAN,
+    abstract_inverted_index TEXT,
+    authors TEXT,
+    institutions TEXT,
+    concepts TEXT,
+    referenced_works TEXT,
+    host_venue TEXT,
+    language TEXT,
+    open_access TEXT,
+    primary_location TEXT,
+    updated_date TEXT
+)
+""")
 
-# --- Funciones ---
-def buscar_articulos(query=QUERY):
-    url = f"https://api.openalex.org/works?search={query}"
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.json()["results"]
+# URL base de OpenAlex con cursor pagination
+url = "https://api.openalex.org/works"
+params = {
+    "filter": "host_venue.publisher:Facultad de Ingenieria-UNAM",  # ajusta tu filtro
+    "per_page": 200,
+    "cursor": "*"
+}
 
-def inicializar_db():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("""CREATE TABLE IF NOT EXISTS articulos (
-                    id TEXT PRIMARY KEY,
-                    titulo TEXT,
-                    autores TEXT,
-                    año INTEGER,
-                    resumen TEXT,
-                    json_url TEXT
-                )""")
+while True:
+    r = requests.get(url, params=params)
+    data = r.json()
+
+    for work in data["results"]:
+        cur.execute("""
+        INSERT OR REPLACE INTO articulos VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        """, (
+            work.get("id"),
+            work.get("doi"),
+            work.get("title"),
+            work.get("publication_year"),
+            work.get("publication_date"),
+            work.get("type"),
+            work.get("cited_by_count"),
+            work.get("is_retracted"),
+            str(work.get("abstract_inverted_index")),
+            str(work.get("authorships")),
+            str(work.get("institutions")),
+            str(work.get("concepts")),
+            str(work.get("referenced_works")),
+            str(work.get("host_venue")),
+            work.get("language"),
+            str(work.get("open_access")),
+            str(work.get("primary_location")),
+            work.get("updated_date")
+        ))
+
     conn.commit()
-    conn.close()
 
-def guardar_articulos(articulos):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    nuevos = []
-    for art in articulos:
-        autores = ", ".join([a["author"]["display_name"] for a in art.get("authorships", [])])
-        datos = (
-            art["id"],
-            art["title"],
-            autores,
-            art["publication_year"],
-            art.get("abstract", ""),
-            art["id"]  # URL JSON de OpenAlex
-        )
-        try:
-            c.execute("INSERT INTO articulos VALUES (?, ?, ?, ?, ?, ?)", datos)
-            nuevos.append(art)
-        except sqlite3.IntegrityError:
-            # Ya existe, lo ignoramos
-            pass
-    conn.commit()
-    conn.close()
-    return nuevos
+    # Avanzar al siguiente cursor
+    next_cursor = data.get("meta", {}).get("next_cursor")
+    if not next_cursor:
+        break
+    params["cursor"] = next_cursor
 
-def enviar_notificacion(nuevos):
-    if not nuevos:
-        return
-    cuerpo = "Se encontraron nuevos artículos:\n\n" + "\n".join([art["title"] for art in nuevos])
-    msg = MIMEText(cuerpo)
-    msg["Subject"] = "Nuevos artículos DVRP en OpenAlex"
-    msg["From"] = EMAIL_USER
-    msg["To"] = EMAIL_TO
-
-    with smtplib.SMTP("smtp.gmail.com", 587) as server:
-        server.starttls()
-        server.login(EMAIL_USER, EMAIL_PASS)
-        server.send_message(msg)
-
-# --- Flujo principal ---
-def main():
-    inicializar_db()
-    articulos = buscar_articulos()
-    nuevos = guardar_articulos(articulos)
-
-if __name__ == "__main__":
-    main()
+conn.close()
 
