@@ -76,7 +76,6 @@ def main():
     inicializar_db()
     articulos = buscar_articulos()
     nuevos = guardar_articulos(articulos)
-    enviar_notificacion(nuevos)
 
 if __name__ == "__main__":
     main()
