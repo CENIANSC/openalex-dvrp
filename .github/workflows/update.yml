@@ -22,7 +22,4 @@ jobs:
 
       - name: Ejecutar script de actualización
         run: python scripts/openalex_update.py
-        env:
-          EMAIL_USER: ${{ secrets.EMAIL_USER }}
-          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
 
