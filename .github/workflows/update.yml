@@ -22,3 +22,16 @@ jobs:
 
       - name: Ejecutar script de actualización
         run: python scripts/openalex_update.py
+
+      - name: Subir base de datos como artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: articulos_db
+          path: db/articulos_dvrp.db
+
+      - name: Subir CSV como artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: articulos_csv
+          path: articulos.csv
+
