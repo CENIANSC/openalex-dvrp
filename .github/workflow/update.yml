@@ -1,0 +1,28 @@
+name: Actualización mensual DVRP
+
+on:
+  schedule:
+    - cron: "0 0 1 * *"  # cada mes, día 1 a medianoche
+  workflow_dispatch:
+
+jobs:
+  update-openalex:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Ejecutar script de actualización
+        run: python scripts/openalex_update.py
+        env:
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+
