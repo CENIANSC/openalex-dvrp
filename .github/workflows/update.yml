@@ -2,36 +2,38 @@ name: Actualización mensual DVRP
 
 on:
   schedule:
-    - cron: "0 0 1 * *"  # cada mes, día 1 a medianoche
-  workflow_dispatch:      # ejecución manual opcional
+    - cron: "0 0 1 * *"   # cada mes, día 1 a medianoche
+  workflow_dispatch:       # ejecución manual opcional
 
 jobs:
   update-openalex:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4   # actualizado
 
       - name: Configurar Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5   # actualizado
         with:
           python-version: "3.10"
 
       - name: Instalar dependencias
         run: pip install -r requirements.txt
 
-      - name: Ejecutar script de actualización
+      - name: Ejecutar script de actualización con paginación
         run: python scripts/openalex_update.py
 
       - name: Subir base de datos como artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4   # actualizado
         with:
           name: articulos_db
           path: db/articulos_dvrp.db
 
       - name: Subir CSV como artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4   # actualizado
         with:
           name: articulos_csv
-          path: db/articulos.csv
+          path: articulos.csv
+
 
