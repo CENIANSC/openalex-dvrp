@@ -24,10 +24,10 @@ jobs:
         run: python scripts/openalex_update.py
         
       - name: Guardar resultados en el repositorio
-      run: |
-       git config --global user.name "github-actions"
-       git config --global user.email "github-actions@github.com"
-       git add db/articulos_dvrp.db articulos.csv || true
-       git commit -m "Actualización automática de base de datos y CSV" || true
-       git push
+        run: |
+         git config --global user.name "github-actions"
+         git config --global user.email "github-actions@github.com"
+         git add db/articulos_dvrp.db articulos.csv || true
+         git commit -m "Actualización automática de base de datos y CSV" || true
+         git push
 
