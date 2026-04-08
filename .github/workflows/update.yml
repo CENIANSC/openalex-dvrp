@@ -24,13 +24,13 @@ jobs:
         run: python scripts/openalex_update.py
 
       - name: Subir base de datos como artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: articulos_db
           path: db/articulos_dvrp.db
 
       - name: Subir CSV como artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: articulos_csv
           path: articulos.csv
