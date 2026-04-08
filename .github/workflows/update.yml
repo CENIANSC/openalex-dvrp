@@ -1,4 +1,4 @@
-name: update-openalex
+name: Actualización mensual DVRP
 
 on:
   workflow_dispatch:   # permite ejecutarlo manualmente
