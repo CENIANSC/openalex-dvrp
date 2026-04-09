@@ -68,4 +68,50 @@ if uploaded_file:
                 "id": data.get("id"),
                 "DOI": data.get("doi"),
                 "Título": data.get("title"),
-                "Año": data.get("publication_year
+                "Año": data.get("publication_year"),
+                "Citado por": data.get("cited_by_count"),
+                "Resumen": reconstruir_abstract(data.get("abstract_inverted_index")),
+                "Conceptos": "; ".join([c.get("display_name") for c in data.get("concepts", []) if c.get("display_name")]),
+                "Temas": "; ".join([t.get("display_name") for t in data.get("topics", []) if t.get("display_name")]),
+                "Autores": "; ".join([a.get("author", {}).get("display_name") for a in data.get("authorships", []) if a.get("author")]),
+                "Instituciones": "; ".join([inst.get("display_name") for a in data.get("authorships", []) for inst in a.get("institutions", []) if inst.get("display_name")]),
+                "Revista": revista,
+                "Editorial": editorial,
+                "Field": field,
+                "Subfield": subfield,
+                "Domain": domain,
+                "SDGs": "; ".join([sdg.get("display_name") for sdg in data.get("sustainable_development_goals", []) if sdg.get("display_name")]),
+                "Funders": "; ".join([f.get("display_name") for f in data.get("funders", []) if f.get("display_name")])
+            }
+            metadata.append(info)
+
+    meta_df = pd.DataFrame(metadata)
+
+    # Mostrar resultados
+    st.write("Resultados procesados:")
+    st.dataframe(meta_df)
+
+    # Gráfico de frecuencia de años de publicación
+    st.subheader("Frecuencia de año de publicación")
+    if not meta_df["Año"].isnull().all():
+        plt.figure(figsize=(8,4))
+        sns.countplot(x="Año", data=meta_df, order=meta_df["Año"].value_counts().index)
+        plt.xticks(rotation=45)
+        st.pyplot(plt)
+
+    # Nube de palabras de conceptos
+    st.subheader("Nube de palabras de Conceptos")
+    all_concepts = " ".join(meta_df["Conceptos"].dropna())
+    if all_concepts.strip():
+        wordcloud = WordCloud(width=800, height=400, background_color="white").generate(all_concepts)
+        plt.figure(figsize=(10,5))
+        plt.imshow(wordcloud, interpolation="bilinear")
+        plt.axis("off")
+        st.pyplot(plt)
+
+    # Botón para descargar Excel
+    output_file = "openalex_metadata.xlsx"
+    meta_df.to_excel(output_file, index=False)
+    with open(output_file, "rb") as f:
+        st.download_button("Descargar Excel", f, file_name=output_file)
+
