@@ -14,13 +14,17 @@ def reconstruir_abstract(abstract_inverted_index):
             words[pos] = word
     return " ".join(words)
 
-st.title("Revisión de artículos con OpenAlex")
+st.title("Explorador de metadatos en OpenAlex")
 
-# Subir archivo Excel
-uploaded_file = st.file_uploader("Sube tu archivo Excel con IDs de OpenAlex", type=["xlsx"])
+# Subir archivo Excel (sin encabezado, solo IDs en la columna A)
+uploaded_file = st.file_uploader("Sube tu archivo Excel con IDs de OpenAlex (sin encabezado)", type=["xlsx"])
 
 if uploaded_file:
-    df = pd.read_excel(uploaded_file)
+    # Leer Excel sin encabezado
+    df = pd.read_excel(uploaded_file, header=None)
+    # Renombrar la primera columna como "OpenAlex_ID"
+    df.rename(columns={0: "OpenAlex_ID"}, inplace=True)
+
     st.write("Archivo cargado con", len(df), "IDs")
 
     metadata = []
@@ -61,3 +65,4 @@ if uploaded_file:
     meta_df.to_excel(output_file, index=False)
     with open(output_file, "rb") as f:
         st.download_button("Descargar Excel", f, file_name=output_file)
+
