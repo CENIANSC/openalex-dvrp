@@ -4,5 +4,10 @@ requests
 openpyxl
 matplotlib
 wordcloud
+pandas
+requests
+matplotlib
+seaborn
+wordcloud
 
 
