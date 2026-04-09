@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 import requests
+import matplotlib.pyplot as plt
+import seaborn as sns
+from wordcloud import WordCloud
 
 # Función auxiliar para reconstruir el abstract
 def reconstruir_abstract(abstract_inverted_index):
@@ -20,9 +23,7 @@ st.title("Explorador de metadatos en OpenAlex")
 uploaded_file = st.file_uploader("Sube tu archivo Excel con IDs de OpenAlex (sin encabezado)", type=["xlsx"])
 
 if uploaded_file:
-    # Leer Excel sin encabezado
     df = pd.read_excel(uploaded_file, header=None)
-    # Renombrar la primera columna como "OpenAlex_ID"
     df.rename(columns={0: "OpenAlex_ID"}, inplace=True)
 
     st.write("Archivo cargado con", len(df), "IDs")
@@ -60,9 +61,25 @@ if uploaded_file:
     st.write("Resultados procesados:")
     st.dataframe(meta_df)
 
+    # Gráfico de frecuencia de años de publicación
+    st.subheader("Frecuencia de año de publicación")
+    plt.figure(figsize=(8,4))
+    sns.countplot(x="Año", data=meta_df, order=meta_df["Año"].value_counts().index)
+    plt.xticks(rotation=45)
+    st.pyplot(plt)
+
+    # Nube de palabras de conceptos
+    st.subheader("Nube de palabras de Conceptos")
+    all_concepts = " ".join(meta_df["Conceptos"].dropna())
+    if all_concepts.strip():
+        wordcloud = WordCloud(width=800, height=400, background_color="white").generate(all_concepts)
+        plt.figure(figsize=(10,5))
+        plt.imshow(wordcloud, interpolation="bilinear")
+        plt.axis("off")
+        st.pyplot(plt)
+
     # Botón para descargar Excel
     output_file = "openalex_metadata.xlsx"
     meta_df.to_excel(output_file, index=False)
     with open(output_file, "rb") as f:
         st.download_button("Descargar Excel", f, file_name=output_file)
-
