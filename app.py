@@ -17,7 +17,7 @@ def reconstruir_abstract(abstract_inverted_index):
             words[pos] = word
     return " ".join(words)
 
-st.title("Explorador de metadatos en OpenAlex")
+st.title("Explorador de metadatos")
 
 # Subir archivo Excel (sin encabezado, solo IDs en la columna A)
 uploaded_file = st.file_uploader("Sube tu archivo Excel con IDs de OpenAlex (sin encabezado)", type=["xlsx"])
