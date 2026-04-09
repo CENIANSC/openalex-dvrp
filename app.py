@@ -17,38 +17,46 @@ def reconstruir_abstract(abstract_inverted_index):
             words[pos] = word
     return " ".join(words)
 
-st.title("Explorador de metadatos")
+st.title("Explorador de metadatos en OpenAlex")
 
-# Subir archivo Excel (sin encabezado, solo IDs en la columna A)
-uploaded_file = st.file_uploader("Sube tu archivo Excel con IDs de OpenAlex (sin encabezado)", type=["xlsx"])
+# Entrada de búsqueda y rango de años
+search_query = st.text_input("Término de búsqueda (en título y abstract)", "dynamic vehicle routing problem")
+start_year = st.number_input("Año inicial", min_value=1900, max_value=2100, value=2020)
+end_year = st.number_input("Año final", min_value=1900, max_value=2100, value=2025)
 
-if uploaded_file:
-    df = pd.read_excel(uploaded_file, header=None)
-    df.rename(columns={0: "OpenAlex_ID"}, inplace=True)
+if st.button("Buscar artículos"):
+    base_url = "https://api.openalex.org/works"
+    params = {
+        "sort": "relevance_score:desc",
+        "filter": f"open_access.is_oa:true,primary_topic.id:t10567,type:article,has_content.pdf:true,publication_year:{start_year}-{end_year}",
+        "search.title_and_abstract": search_query,
+        "per_page": 200,
+        "cursor": "*"
+    }
 
-    st.write("Archivo cargado con", len(df), "IDs")
-
+    ids = []
     metadata = []
-    for article_id in df["OpenAlex_ID"]:
-        # Asegurar que el ID sea de la API
-        if article_id.startswith("https://openalex.org/"):
-            identifier = article_id.split("/")[-1]
-            api_url = f"https://api.openalex.org/works/{identifier}"
-        else:
-            api_url = article_id
 
-        r = requests.get(api_url)
-        if r.status_code == 200:
-            try:
-                data = r.json()
-            except Exception as e:
-                st.error(f"No se pudo decodificar JSON para {api_url}: {e}")
-                continue
+    while True:
+        r = requests.get(base_url, params=params)
+        if r.status_code != 200:
+            st.error(f"Error {r.status_code}: {r.text}")
+            break
 
-            # Manejo seguro de campos que pueden ser None
+        try:
+            data = r.json()
+        except Exception as e:
+            st.error(f"No se pudo decodificar JSON: {e}")
+            st.text(r.text)
+            break
+
+        for work in data.get("results", []):
+            ids.append(work["id"])
+
+            # Manejo seguro de campos
             revista = None
             editorial = None
-            primary_location = data.get("primary_location")
+            primary_location = work.get("primary_location")
             if primary_location:
                 source = primary_location.get("source")
                 if source:
@@ -58,40 +66,50 @@ if uploaded_file:
             field = None
             subfield = None
             domain = None
-            primary_topic = data.get("primary_topic")
+            primary_topic = work.get("primary_topic")
             if primary_topic:
                 field = primary_topic.get("field", {}).get("display_name")
                 subfield = primary_topic.get("subfield", {}).get("display_name")
                 domain = primary_topic.get("domain", {}).get("display_name")
 
             info = {
-                "id": data.get("id"),
-                "DOI": data.get("doi"),
-                "Título": data.get("title"),
-                "Año": data.get("publication_year"),
-                "Citado por": data.get("cited_by_count"),
-                "Resumen": reconstruir_abstract(data.get("abstract_inverted_index")),
-                "Conceptos": "; ".join([c.get("display_name") for c in data.get("concepts", []) if c.get("display_name")]),
-                "Temas": "; ".join([t.get("display_name") for t in data.get("topics", []) if t.get("display_name")]),
-                "Autores": "; ".join([a.get("author", {}).get("display_name") for a in data.get("authorships", []) if a.get("author")]),
-                "Instituciones": "; ".join([inst.get("display_name") for a in data.get("authorships", []) for inst in a.get("institutions", []) if inst.get("display_name")]),
+                "id": work.get("id"),
+                "DOI": work.get("doi"),
+                "Título": work.get("title"),
+                "Año": work.get("publication_year"),
+                "Citado por": work.get("cited_by_count"),
+                "Resumen": reconstruir_abstract(work.get("abstract_inverted_index")),
+                "Conceptos": "; ".join([c.get("display_name") for c in work.get("concepts", []) if c.get("display_name")]),
+                "Temas": "; ".join([t.get("display_name") for t in work.get("topics", []) if t.get("display_name")]),
+                "Autores": "; ".join([a.get("author", {}).get("display_name") for a in work.get("authorships", []) if a.get("author")]),
+                "Instituciones": "; ".join([
+                    inst.get("display_name")
+                    for a in work.get("authorships", [])
+                    for inst in a.get("institutions", [])
+                    if inst.get("display_name")
+                ]),
                 "Revista": revista,
                 "Editorial": editorial,
                 "Field": field,
                 "Subfield": subfield,
                 "Domain": domain,
-                "SDGs": "; ".join([sdg.get("display_name") for sdg in data.get("sustainable_development_goals", []) if sdg.get("display_name")]),
-                "Funders": "; ".join([f.get("display_name") for f in data.get("funders", []) if f.get("display_name")])
+                "SDGs": "; ".join([sdg.get("display_name") for sdg in work.get("sustainable_development_goals", []) if sdg.get("display_name")]),
+                "Funders": "; ".join([f.get("display_name") for f in work.get("funders", []) if f.get("display_name")])
             }
             metadata.append(info)
 
+        next_cursor = data["meta"].get("next_cursor")
+        if next_cursor:
+            params["cursor"] = next_cursor
+        else:
+            break
+
     meta_df = pd.DataFrame(metadata)
 
-    # Mostrar resultados
-    st.write("Resultados procesados:")
+    st.write("Total de artículos encontrados:", len(meta_df))
     st.dataframe(meta_df)
 
-    # Gráfico de frecuencia de años de publicación
+    # Gráfico de frecuencia de años
     st.subheader("Frecuencia de año de publicación")
     if not meta_df["Año"].isnull().all():
         plt.figure(figsize=(8,4))
@@ -114,4 +132,3 @@ if uploaded_file:
     meta_df.to_excel(output_file, index=False)
     with open(output_file, "rb") as f:
         st.download_button("Descargar Excel", f, file_name=output_file)
-
