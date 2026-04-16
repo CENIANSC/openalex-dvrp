@@ -93,6 +93,14 @@ if st.button("Buscar artículos"):
 
     meta_df = pd.DataFrame(metadata)
 
+    # Ajustar índice para que empiece en 1
+    meta_df.index = meta_df.index + 1
+    meta_df.index.name = "Artículo"
+
+st.write("Total de artículos encontrados:", len(meta_df))
+st.dataframe(meta_df)
+
+
     st.write("Total de artículos encontrados:", len(meta_df))
     st.dataframe(meta_df)
 
