@@ -79,7 +79,7 @@ if st.button("Buscar artículos"):
                 "Concepts": "; ".join([c.get("display_name") for c in work.get("concepts", []) if c.get("display_name")]),
                 "Themes": "; ".join([t.get("display_name") for t in work.get("topics", []) if t.get("display_name")]),
                 "SDGs": "; ".join([sdg.get("display_name") for sdg in work.get("sustainable_development_goals", []) if sdg.get("display_name")]),
-                "Funders": "; ".join([f.get("display_name") for f in work.get("funders", []) if f.get("display_name")])
+                "Funders": "; ".join([f.get("display_name") for f in work.get("funders", []) if f.get("display_name")]),
                 "Cited by": work.get("cited_by_count"),
                 "DOI": work.get("doi"),
             }
