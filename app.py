@@ -63,15 +63,6 @@ if st.button("Buscar artículos"):
                     revista = source.get("display_name")
                     editorial = source.get("host_organization_name")
 
-            field = None
-            subfield = None
-            domain = None
-            primary_topic = work.get("primary_topic")
-            if primary_topic:
-                field = primary_topic.get("field", {}).get("display_name")
-                subfield = primary_topic.get("subfield", {}).get("display_name")
-                domain = primary_topic.get("domain", {}).get("display_name")
-
             info = {
                 "id": work.get("id"),
                 "DOI": work.get("doi"),
