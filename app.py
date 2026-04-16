@@ -64,25 +64,24 @@ if st.button("Buscar artículos"):
                     editorial = source.get("host_organization_name")
 
             info = {
-                "id": work.get("id"),
-                "DOI": work.get("doi"),
+                "Year": work.get("publication_year"),
                 "Título": work.get("title"),
-                "Año": work.get("publication_year"),
-                "Citado por": work.get("cited_by_count"),
-                "Resumen": reconstruir_abstract(work.get("abstract_inverted_index")),
-                "Conceptos": "; ".join([c.get("display_name") for c in work.get("concepts", []) if c.get("display_name")]),
-                "Temas": "; ".join([t.get("display_name") for t in work.get("topics", []) if t.get("display_name")]),
-                "Autores": "; ".join([a.get("author", {}).get("display_name") for a in work.get("authorships", []) if a.get("author")]),
-                "Instituciones": "; ".join([
+                "Journal": revista,
+                "Authors": "; ".join([a.get("author", {}).get("display_name") for a in work.get("authorships", []) if a.get("author")]),
+                "Institutions": "; ".join([
                     inst.get("display_name")
                     for a in work.get("authorships", [])
                     for inst in a.get("institutions", [])
                     if inst.get("display_name")
                 ]),
-                "Revista": revista,
-                "Editorial": editorial,
+                "Editorial": editorial,                
+                "Abstract": reconstruir_abstract(work.get("abstract_inverted_index")),
+                "Concepts": "; ".join([c.get("display_name") for c in work.get("concepts", []) if c.get("display_name")]),
+                "Themes": "; ".join([t.get("display_name") for t in work.get("topics", []) if t.get("display_name")]),
                 "SDGs": "; ".join([sdg.get("display_name") for sdg in work.get("sustainable_development_goals", []) if sdg.get("display_name")]),
                 "Funders": "; ".join([f.get("display_name") for f in work.get("funders", []) if f.get("display_name")])
+                "Cited by": work.get("cited_by_count"),
+                "DOI": work.get("doi"),
             }
             metadata.append(info)
 
