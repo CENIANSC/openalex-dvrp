@@ -81,9 +81,6 @@ if st.button("Buscar artículos"):
                 ]),
                 "Revista": revista,
                 "Editorial": editorial,
-                "Field": field,
-                "Subfield": subfield,
-                "Domain": domain,
                 "SDGs": "; ".join([sdg.get("display_name") for sdg in work.get("sustainable_development_goals", []) if sdg.get("display_name")]),
                 "Funders": "; ".join([f.get("display_name") for f in work.get("funders", []) if f.get("display_name")])
             }
