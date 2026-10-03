@@ -26,6 +26,7 @@ end_year = st.number_input("Año final", min_value=1900, max_value=2100, value=2
 
 if st.button("Buscar artículos"):
     base_url = "https://api.openalex.org/works"
+    headers = {"Authorization": "Bearer 2yBYOdo5vQTH51W9k0dCEI"}
     params = {
         "sort": "relevance_score:desc",
         "filter": f"open_access.is_oa:true,primary_topic.id:t10567,type:article,has_content.pdf:true,publication_year:{start_year}-{end_year}",
