@@ -137,36 +137,43 @@ if st.button("Buscar artículos"):
        plt.title("Impacto de publicaciones por año")
        st.pyplot(plt)
 
-    # 🔹 3. Treemap de conceptos
+    # 🔹 3. Treemap de conceptos (optimizado para evitar empalmes)
     import squarify
     st.subheader("Treemap de conceptos más frecuentes")
+
     concept_counts = meta_df["Concepts"].str.split("; ").explode().value_counts().head(20)
     if not concept_counts.empty:
-       plt.figure(figsize=(10,6))
-       squarify.plot(
-           sizes=concept_counts.values,
-           label=[f"{name}\n({count})" for name, count in zip(concept_counts.index, concept_counts.values)],
-           alpha=0.8,
-           text_kwargs={'fontsize':10, 'wrap':True}
-       )
-       plt.axis("off")
-       st.pyplot(plt)
+        labels = [
+            f"{name[:25]}...\n({count})" if len(name) > 25 else f"{name}\n({count})"
+            for name, count in zip(concept_counts.index, concept_counts.values)
+        ]
+        plt.figure(figsize=(12,7))
+        squarify.plot(sizes=concept_counts.values, label=labels, alpha=0.8, text_kwargs={'fontsize':8})
+        plt.axis("off")
+        st.pyplot(plt)
     else:
-        st.info("No hay suficientes conceptos para generar el Treemap")
+        st.info("No hay suficientes conceptos para generar el treemap.")
+
 
     # 🔹 4. Heatmap de coocurrencia de conceptos
     st.subheader("Coocurrencia de conceptos")
     from itertools import combinations
     concept_pairs = []
     for concepts in meta_df["Concepts"].dropna():
-       items = [c.strip() for c in concepts.split(";") if c.strip()]
-       for pair in combinations(items, 2):
-           concept_pairs.append(tuple(sorted(pair)))
-    pair_df = pd.DataFrame(concept_pairs, columns=["Concept1", "Concept2"])
-    heatmap_df = pair_df.value_counts().reset_index(name="Count").pivot_table("Concept1", "Concept2", "Count").fillna(0)
-    plt.figure(figsize=(10,8))
-    sns.heatmap(heatmap_df, cmap="YlGnBu")
-    st.pyplot(plt)
+         items = [c.strip() for c in concepts.split(";") if c.strip()]
+         for pair in combinations(items, 2):
+             concept_pairs.append(tuple(sorted(pair)))
+
+    if concept_pairs:
+       pair_df = pd.DataFrame(concept_pairs, columns=["Concept1", "Concept2"])
+       pair_counts = pair_df.value_counts().reset_index(name="Count")
+       heatmap_df = pair_counts.pivot_table(index="Concept1", columns="Concept2", values="Count", fill_value=0)
+
+       plt.figure(figsize=(10,8))
+       sns.heatmap(heatmap_df, cmap="YlGnBu")
+       st.pyplot(plt)
+    else:
+        st.info("No hay suficientes conceptos para generar el heatmap.")
 
     # 🔹 5. Mapa de colaboración institucional (simplificado)
     st.subheader("Mapa de colaboración institucional")
