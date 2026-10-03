@@ -39,7 +39,7 @@ if st.button("Buscar artículos"):
     metadata = []
 
     while True:
-        r = requests.get(base_url, params=params)
+        r = requests.get(base_url, params=params, headers=headers)
         if r.status_code != 200:
             st.error(f"Error {r.status_code}: {r.text}")
             break
