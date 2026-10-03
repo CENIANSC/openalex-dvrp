@@ -119,6 +119,62 @@ if st.button("Buscar artículos"):
         plt.axis("off")
         st.pyplot(plt)
 
+    # 🔹 1. Distribución por revista
+    st.subheader("Revistas más frecuentes")
+    if not meta_df["Journal"].isnull().all():
+       top_journals = meta_df["Journal"].value_counts().head(10)
+       plt.figure(figsize=(8,4))
+       sns.barplot(x=top_journals.values, y=top_journals.index, palette="crest")
+       plt.xlabel("Número de artículos")
+       plt.ylabel("Revista")
+       st.pyplot(plt)
+
+    # 🔹 2. Gráfico de dispersión (impacto vs. año)
+    st.subheader("Relación entre citas y año de publicación")
+    if not meta_df["Year"].isnull().all() and not meta_df["Cited by"].isnull().all():
+       plt.figure(figsize=(8,4))
+       sns.scatterplot(x="Year", y="Cited by", data=meta_df, hue="Year", palette="viridis", alpha=0.7)
+       plt.title("Impacto de publicaciones por año")
+       st.pyplot(plt)
+
+    # 🔹 3. Treemap de conceptos
+    import squarify
+    st.subheader("Treemap de conceptos más frecuentes")
+    concept_counts = meta_df["Concepts"].str.split("; ").explode().value_counts().head(20)
+    if not concept_counts.empty:
+       plt.figure(figsize=(10,6))
+       squarify.plot(sizes=concept_counts.values, label=concept_counts.index, alpha=0.8)
+       plt.axis("off")
+       st.pyplot(plt)
+
+    # 🔹 4. Heatmap de coocurrencia de conceptos
+    st.subheader("Coocurrencia de conceptos")
+    from itertools import combinations
+    concept_pairs = []
+    for concepts in meta_df["Concepts"].dropna():
+       items = [c.strip() for c in concepts.split(";") if c.strip()]
+       for pair in combinations(items, 2):
+           concept_pairs.append(tuple(sorted(pair)))
+    pair_df = pd.DataFrame(concept_pairs, columns=["Concept1", "Concept2"])
+    heatmap_df = pair_df.value_counts().reset_index(name="Count").pivot("Concept1", "Concept2", "Count").fillna(0)
+    plt.figure(figsize=(10,8))
+    sns.heatmap(heatmap_df, cmap="YlGnBu")
+    st.pyplot(plt)
+
+    # 🔹 5. Mapa de colaboración institucional (simplificado)
+    st.subheader("Mapa de colaboración institucional")
+    import networkx as nx
+    G = nx.Graph()
+    for institutions in meta_df["Institutions"].dropna():
+        inst_list = [i.strip() for i in institutions.split(";") if i.strip()]
+        for pair in combinations(inst_list, 2):
+            G.add_edge(*pair)
+    plt.figure(figsize=(10,8))
+    pos = nx.spring_layout(G, k=0.5)
+    nx.draw(G, pos, node_size=30, font_size=6, with_labels=False)
+    st.pyplot(plt)
+
+
     # Botón para descargar Excel
     output_file = "openalex_metadata.xlsx"
     meta_df.to_excel(output_file, index=False)
