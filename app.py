@@ -143,9 +143,16 @@ if st.button("Buscar artículos"):
     concept_counts = meta_df["Concepts"].str.split("; ").explode().value_counts().head(20)
     if not concept_counts.empty:
        plt.figure(figsize=(10,6))
-       squarify.plot(sizes=concept_counts.values, label=concept_counts.index, alpha=0.8)
+       squarify.plot(
+           sizes=concept_counts.values,
+           label=[f"{name}\n({count})" for name, count in zip(concept_counts.index, concept_counts.values)],
+           alpha=0.8,
+           text_kwargs={'fontsize':10, 'wrap':True}
+       )
        plt.axis("off")
        st.pyplot(plt)
+    else:
+        st.info("No hay suficientes conceptos para generar el Treemap")
 
     # 🔹 4. Heatmap de coocurrencia de conceptos
     st.subheader("Coocurrencia de conceptos")
@@ -156,7 +163,7 @@ if st.button("Buscar artículos"):
        for pair in combinations(items, 2):
            concept_pairs.append(tuple(sorted(pair)))
     pair_df = pd.DataFrame(concept_pairs, columns=["Concept1", "Concept2"])
-    heatmap_df = pair_df.value_counts().reset_index(name="Count").pivot("Concept1", "Concept2", "Count").fillna(0)
+    heatmap_df = pair_df.value_counts().reset_index(name="Count").pivot_table("Concept1", "Concept2", "Count").fillna(0)
     plt.figure(figsize=(10,8))
     sns.heatmap(heatmap_df, cmap="YlGnBu")
     st.pyplot(plt)
