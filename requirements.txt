@@ -9,5 +9,8 @@ requests
 matplotlib
 seaborn
 wordcloud
+squarify
+networkx
+
 
 
