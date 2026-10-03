@@ -175,18 +175,45 @@ if st.button("Buscar artículos"):
     else:
         st.info("No hay suficientes conceptos para generar el heatmap.")
 
-    # 🔹 5. Mapa de colaboración institucional (simplificado)
+    # 🔹 5. Mapa de colaboración institucional (mejorado con centralidad y etiquetas)
     st.subheader("Mapa de colaboración institucional")
     import networkx as nx
+
     G = nx.Graph()
     for institutions in meta_df["Institutions"].dropna():
         inst_list = [i.strip() for i in institutions.split(";") if i.strip()]
         for pair in combinations(inst_list, 2):
             G.add_edge(*pair)
-    plt.figure(figsize=(10,8))
-    pos = nx.spring_layout(G, k=0.5)
-    nx.draw(G, pos, node_size=30, font_size=6, with_labels=False)
-    st.pyplot(plt)
+
+    if G.number_of_nodes() > 0:
+        # Calcular centralidad de grado (número de conexiones de cada institución)
+        degree_centrality = nx.degree_centrality(G)
+
+        plt.figure(figsize=(12,8))
+        pos = nx.spring_layout(G, k=0.5)
+
+        # Dibujar nodos con tamaño proporcional a su centralidad
+        nx.draw_networkx_nodes(
+            G, pos,
+            node_size=[v*800 for v in degree_centrality.values()],
+            alpha=0.7
+        )
+        nx.draw_networkx_edges(G, pos, alpha=0.3)
+
+        # Etiquetas de instituciones (pequeñas para evitar empalmes)
+        nx.draw_networkx_labels(G, pos, font_size=6)
+
+        plt.title("Mapa de colaboración institucional (tamaño = centralidad)")
+        st.pyplot(plt)
+
+        # Resumen textual complementario
+        st.write(f"Instituciones representadas: {G.number_of_nodes()}")
+        st.write(f"Colaboraciones detectadas: {G.number_of_edges()}")
+        # Mostrar la institución más conectada
+        top_inst = max(degree_centrality, key=degree_centrality.get)
+        st.write(f"La institución más conectada es: **{top_inst}**")
+    else:
+        st.info("No hay suficientes instituciones para generar el mapa.")
 
 
     # Botón para descargar Excel
