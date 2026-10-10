@@ -37,7 +37,9 @@ from modules.topics import (
     mostrar_temas_frecuentes
 )
 
-
+from modules.networks import (
+    mostrar_metricas_red_institucional
+)
 
 
 # Función auxiliar para reconstruir el abstract
@@ -180,6 +182,7 @@ if st.button("Buscar artículos"):
         mostrar_nube_conceptos(meta_df)
         mostrar_treemap_conceptos(meta_df)
         mostrar_concurrencia_conceptos(meta_df)
+        mostrar_metricas_red_institucional(meta_df)
         
         
         # Botón para descargar Excel
