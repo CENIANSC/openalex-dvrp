@@ -28,6 +28,13 @@ from modules.concepts import (
     mostrar_coocurrencia_conceptos
 )
 
+from modules.journals import (
+    mostrar_revistas_frecuentes,
+    mostrar_publicaciones_por_anio,
+    mostrar_impacto_por_anio
+)
+
+
 
 
 # Función auxiliar para reconstruir el abstract
@@ -148,39 +155,16 @@ if st.button("Buscar artículos"):
         st.write("Total de artículos encontrados:", len(meta_df))
         st.dataframe(meta_df)
 
-        # Gráfico de frecuencia de años
-        st.subheader("Frecuencia de año de publicación")
-        if not meta_df["Year"].isnull().all():
-            plt.figure(figsize=(8,4))
-            sns.countplot(x="Year", data=meta_df, order=meta_df["Year"].value_counts().index)
-            plt.xticks(rotation=45)
-            st.pyplot(plt)
 
-        # 🔹 1. Distribución por revista
-        st.subheader("Revistas más frecuentes")
-        if not meta_df["Journal"].isnull().all():
-            top_journals = meta_df["Journal"].value_counts().head(10)
-            plt.figure(figsize=(8,4))
-            sns.barplot(x=top_journals.values, y=top_journals.index, palette="crest")
-            plt.xlabel("Número de artículos")
-            plt.ylabel("Revista")
-            st.pyplot(plt)
 
-        # 🔹 2. Gráfico (impacto vs. año)
-        impact_by_year=(
-            meta_df
-            .groupby("Year")["Cited by"]
-            .mean()
-            .reset.index()
-        )
-        plt.figure(figsize=(10,5))
-        sns.barplot(data=impact_by_year,x="Year",y="Cited by")
-        plt.xticks(rotation=45)
-        st.pyplot(plt)
+
 
 
 
     
+        mostrar_publicaciones_por_anio(meta_df)
+        mostrar_revistas_frecuentes(meta_df)
+        mostrar_impacto_por_anio(meta_df)
         mostrar_indicadores(meta_df)
         mostrar_indice_h(meta_df)
         mostrar_articulos_mas_citados(meta_df)
