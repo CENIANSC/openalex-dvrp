@@ -26,6 +26,12 @@ from modules.indicators import (
     mostrar_articulos_mas_citados
 )
 
+
+from modules.authors import (
+    mostrar_top_autores,
+    mostrar_red_coautoria
+)
+
 # Función auxiliar para reconstruir el abstract
 def reconstruir_abstract(abstract_inverted_index):
     if not abstract_inverted_index:
