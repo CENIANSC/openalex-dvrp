@@ -20,7 +20,11 @@ from bibliometrics import (
     mostrar_temas_emergentes
 )
 
-
+from modules.indicators import (
+    mostrar_indicadores,
+    mostrar_indice_h,
+    mostrar_articulos_mas_citados
+)
 
 # Función auxiliar para reconstruir el abstract
 def reconstruir_abstract(abstract_inverted_index):
@@ -292,6 +296,7 @@ if st.button("Buscar artículos"):
     
         mostrar_indicadores(meta_df)
         mostrar_h_index(meta_df)
+        mostrar_articulos_mas_citados(meta_df)
         mostrar_top_autores(meta_df)
         mostrar_top_instituciones(meta_df)
         mostrar_top_citados(meta_df)
