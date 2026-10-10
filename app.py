@@ -8,6 +8,20 @@ import networkx as nx
 import squarify
 from itertools import combinations
 
+
+from bibliometrics import (
+    mostrar_indicadores,
+    mostrar_h_index,
+    mostrar_top_autores,
+    mostrar_top_instituciones,
+    mostrar_top_paises,
+    mostrar_top_citados,
+    mostrar_red_coautoria,
+    mostrar_temas_emergentes
+)
+
+
+
 # Función auxiliar para reconstruir el abstract
 def reconstruir_abstract(abstract_inverted_index):
     if not abstract_inverted_index:
@@ -240,6 +254,14 @@ if st.button("Buscar artículos"):
             st.info("No hay suficientes instituciones para generar el mapa.")
 
     
+        mostrar_indicadores(meta_df)
+        mostrar_h_index(meta_df)
+        mostrar_top_autores(meta_df)
+        mostrar_top_instituciones(meta_df)
+        mostrar_top_citados(meta_df)
+        mostrar_red_coautoria(meta_df)
+        mostrar_temas_emergentes(meta_df)
+        
         # Botón para descargar Excel
         output_file = "openalex_metadata.xlsx"
         meta_df.to_excel(output_file, index=False)
