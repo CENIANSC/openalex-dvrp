@@ -96,10 +96,10 @@ def mostrar_treemap_conceptos(meta_df):
     st.pyplot(plt)
 
 
-def mostrar_coocurrencia_conceptos(meta_df):
+def mostrar_concurrencia_conceptos(meta_df):
 
     st.subheader(
-        "Coocurrencia de conceptos"
+        "Concurrencia de conceptos"
     )
 
     concept_pairs = []
