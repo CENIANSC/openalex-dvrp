@@ -230,7 +230,7 @@ if st.button("Buscar artículos"):
         for institutions in meta_df["Institutions"].dropna():
             inst_list = list(set(
                 i.strip() 
-                for i in institutions.split(";) 
+                for i in institutions.split(";") 
                 if i.strip()
             ))
 
