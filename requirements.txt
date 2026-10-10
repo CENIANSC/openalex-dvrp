@@ -11,6 +11,9 @@ seaborn
 wordcloud
 squarify
 networkx
-
+spicy
+Commit
+Push
+Redeploy
 
 
