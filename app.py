@@ -4,6 +4,9 @@ import requests
 import matplotlib.pyplot as plt
 import seaborn as sns
 from wordcloud import WordCloud
+import networkx as nx
+import squarify
+from itertools import combinations
 
 # Función auxiliar para reconstruir el abstract
 def reconstruir_abstract(abstract_inverted_index):
@@ -87,6 +90,13 @@ if st.button("Buscar artículos"):
                     for inst in a.get("institutions", [])
                     if inst.get("display_name")
                 ]),
+                "Countries": "; ".join(
+                    set(
+                       c
+                       for a in work.get("authorships", [])
+                       for c in a.get("countries", [])
+                       )
+                ),
                 "Editorial": editorial,                
                 "Abstract": reconstruir_abstract(work.get("abstract_inverted_index")),
                 "Concepts": "; ".join([c.get("display_name") for c in work.get("concepts", []) if c.get("display_name")]),
@@ -229,6 +239,7 @@ if st.button("Buscar artículos"):
         else:
             st.info("No hay suficientes instituciones para generar el mapa.")
 
+    
         # Botón para descargar Excel
         output_file = "openalex_metadata.xlsx"
         meta_df.to_excel(output_file, index=False)
