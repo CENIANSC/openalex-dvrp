@@ -74,13 +74,8 @@ def mostrar_publicaciones_por_anio(meta_df):
         )
     )
 
-    plt.xlabel(
-        "Año"
-    )
-
-    plt.ylabel(
-        "Número de publicaciones"
-    )
+    plt.xlabel("Año")
+    plt.ylabel("Número de publicaciones")
 
     plt.xticks(rotation=45)
 
@@ -117,13 +112,8 @@ def mostrar_impacto_por_anio(meta_df):
         palette="viridis"
     )
 
-    plt.xlabel(
-        "Año"
-    )
-
-    plt.ylabel(
-        "Promedio de citas"
-    )
+    plt.xlabel("Año")
+    plt.ylabel("Promedio de citas")
 
     plt.xticks(rotation=45)
 
