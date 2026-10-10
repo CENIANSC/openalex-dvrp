@@ -17,6 +17,11 @@ from modules.authors import (
     mostrar_red_coautoria
 )
 
+from modules.institutions import (
+    mostrar_top_instituciones,
+    mostrar_top_paises
+)
+
 # Función auxiliar para reconstruir el abstract
 def reconstruir_abstract(abstract_inverted_index):
     if not abstract_inverted_index:
@@ -219,6 +224,7 @@ if st.button("Buscar artículos"):
         mostrar_top_autores(meta_df)
         mostrar_top_instituciones(meta_df)
         mostrar_top_citados(meta_df)
+        mostrar_top_paises(meta_df)
         mostrar_red_coautoria(meta_df)
         mostrar_temas_emergentes(meta_df)
         
