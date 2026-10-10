@@ -164,7 +164,12 @@ if st.button("Buscar artículos"):
             st.pyplot(plt)
 
         # 🔹 2. Gráfico (impacto vs. año)
-        impact_by_year=(meta_df.groupby("Year")["Cited by"].mean().reset.index())
+        impact_by_year=(
+            meta_df
+            .groupby("Year")["Cited by"]
+            .mean()
+            .reset.index()
+        )
         plt.figure(figsize=(10,5))
         sns.barplot(data=impact_by_year,x="Year",y="Cited by")
         plt.xticks(rotation=45)
@@ -209,7 +214,7 @@ if st.button("Buscar artículos"):
 
     
         mostrar_indicadores(meta_df)
-        mostrar_h_index(meta_df)
+        mostrar_indice_h(meta_df)
         mostrar_articulos_mas_citados(meta_df)
         mostrar_top_autores(meta_df)
         mostrar_top_instituciones(meta_df)
