@@ -34,6 +34,11 @@ from modules.journals import (
     mostrar_impacto_por_anio
 )
 
+from modules.topics import (
+    mostrar_temas_emergentes,
+    mostrar_temas_frecuentes
+)
+
 
 
 
@@ -173,10 +178,12 @@ if st.button("Buscar artículos"):
         mostrar_top_citados(meta_df)
         mostrar_top_paises(meta_df)
         mostrar_red_coautoria(meta_df)
+        mostrar_temas_frecuentes(meta_df)
         mostrar_temas_emergentes(meta_df)
         mostrar_nube_conceptos(meta_df)
         mostrar_treemap_conceptos(meta_df)
         mostrar_concurrencia_conceptos(meta_df)
+        
         
         # Botón para descargar Excel
         output_file = "openalex_metadata.xlsx"
