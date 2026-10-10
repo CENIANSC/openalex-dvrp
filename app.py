@@ -4,28 +4,13 @@ import requests
 import matplotlib.pyplot as plt
 import seaborn as sns
 from wordcloud import WordCloud
-import networkx as nx
-import squarify
 from itertools import combinations
-
-
-from bibliometrics import (
-    mostrar_indicadores,
-    mostrar_h_index,
-    mostrar_top_autores,
-    mostrar_top_instituciones,
-    mostrar_top_paises,
-    mostrar_top_citados,
-    mostrar_red_coautoria,
-    mostrar_temas_emergentes
-)
 
 from modules.indicators import (
     mostrar_indicadores,
     mostrar_indice_h,
     mostrar_articulos_mas_citados
 )
-
 
 from modules.authors import (
     mostrar_top_autores,
@@ -181,7 +166,7 @@ if st.button("Buscar artículos"):
         # 🔹 2. Gráfico (impacto vs. año)
         impact_by_year=(meta_df.groupby("Year")["Cited by"].mean().reset.index())
         plt.figure(figsize=(10,5))
-        sns.barplot(data=impact_by_year,x="Año",y="Citas")
+        sns.barplot(data=impact_by_year,x="Year",y="Cited by")
         plt.xticks(rotation=45)
         st.pyplot(plt)
 
@@ -221,83 +206,6 @@ if st.button("Buscar artículos"):
             st.pyplot(plt)
         else:
             st.info("No hay suficientes conceptos para generar el heatmap.")
-
-        # 🔹 5. Mapa de colaboración institucional (mejorado con centralidad y etiquetas)
-        st.subheader("Mapa de colaboración institucional")
-        import networkx as nx
-
-        G = nx.Graph()
-        for institutions in meta_df["Institutions"].dropna():
-            inst_list = list(set(
-                i.strip() 
-                for i in institutions.split(";") 
-                if i.strip()
-            ))
-
-            inst_list = [
-               i for i in inst_list
-               if i in top_institutions
-            ]
-                                  
-            for pair in combinations(inst_list, 2):
-                if G.has_edge(*pair):
-                    G[pair[0]][pair[1]]["weight"]+1
-                else:
-                    G.add_edge(pa*r[0], pair[1], weight=1)
-
-        if G.number_of_nodes() > 0:
-            # Calcular centralidad de grado (número de conexiones de cada institución)
-            degree_centrality = nx.betweenness_centrality(G)
-            plt.figure(figsize=(12,8))
-            pos=nx.spring_layout(G,k=0.5)
-            nx.draw_networkx_nodes(
-                G,
-                pos,
-                node_size=[
-                    v*800
-                    for v in degree_centrality.values()
-                ],
-                alpha=7
-            )
-                
-
-            top_centrality = pd.DataFrame({
-              "Institución": degree_centrality.keys(),
-              "Centralidad": degree_centrality.values()
-            })
-            top_centrality = top_centrality.sort_values(
-              "Centralidad",
-              ascending=False
-            )
-            st.subheader("Instituciones con mayor centralidad")
-            st.dataframe(top_centrality.head(20))
-
-
-            plt.figure(figsize=(12,8))
-            pos = nx.spring_layout(G, k=0.5)
-
-            # Dibujar nodos con tamaño proporcional a su centralidad
-            nx.draw_networkx_nodes(
-                G, pos,
-                node_size=[v*800 for v in degree_centrality.values()],
-                alpha=0.7
-            )
-            nx.draw_networkx_edges(G, pos, alpha=0.3)
-
-            # Etiquetas de instituciones (pequeñas para evitar empalmes)
-            nx.draw_networkx_labels(G, pos, font_size=6)
-
-            plt.title("Mapa de colaboración institucional (tamaño = centralidad)")
-            st.pyplot(plt)
-
-            # Resumen textual complementario
-            st.write(f"Instituciones representadas: {G.number_of_nodes()}")
-            st.write(f"Colaboraciones detectadas: {G.number_of_edges()}")
-            # Mostrar la institución más conectada
-            top_inst = max(degree_centrality, key=degree_centrality.get)
-            st.write(f"La institución más conectada es: **{top_inst}**")
-        else:
-            st.info("No hay suficientes instituciones para generar el mapa.")
 
     
         mostrar_indicadores(meta_df)
