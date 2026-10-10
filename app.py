@@ -218,13 +218,50 @@ if st.button("Buscar artículos"):
 
         G = nx.Graph()
         for institutions in meta_df["Institutions"].dropna():
-            inst_list = [i.strip() for i in institutions.split(";") if i.strip()]
+            inst_list = list(set(
+                i.strip() 
+                for i in institutions.split(";) 
+                if i.strip()
+            ))
+
+            inst_list = [
+               i for i in inst_list
+               if i in top_institutions
+            ]
+                                  
             for pair in combinations(inst_list, 2):
-                G.add_edge(*pair)
+                if G.has_edge(*pair):
+                    G[pair[0]][pair[1]]["weight"]+1
+                else:
+                    G.add_edge(pa*r[0], pair[1], weight=1)
 
         if G.number_of_nodes() > 0:
             # Calcular centralidad de grado (número de conexiones de cada institución)
-            degree_centrality = nx.degree_centrality(G)
+            degree_centrality = nx.betweenness_centrality(G)
+            plt.figure(figsize=(12,8))
+            pos=nx.spring_layout(G,k=0.5)
+            nx.draw_networkx_nodes(
+                G,
+                pos,
+                node_size=[
+                    v*800
+                    for v in degree_centrality.values()
+                ],
+                alpha=7
+            )
+                
+
+            top_centrality = pd.DataFrame({
+              "Institución": degree_centrality.keys(),
+              "Centralidad": degree_centrality.values()
+            })
+            top_centrality = top_centrality.sort_values(
+              "Centralidad",
+              ascending=False
+            )
+            st.subheader("Instituciones con mayor centralidad")
+            st.dataframe(top_centrality.head(20))
+
 
             plt.figure(figsize=(12,8))
             pos = nx.spring_layout(G, k=0.5)
