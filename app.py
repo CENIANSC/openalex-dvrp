@@ -3,8 +3,6 @@ import pandas as pd
 import requests
 import matplotlib.pyplot as plt
 import seaborn as sns
-from wordcloud import WordCloud
-from itertools import combinations
 
 from modules.indicators import (
     mostrar_indicadores,
@@ -25,7 +23,7 @@ from modules.institutions import (
 from modules.concepts import (
     mostrar_nube_conceptos,
     mostrar_treemap_conceptos,
-    mostrar_coocurrencia_conceptos
+    mostrar_concurrencia_conceptos
 )
 
 from modules.journals import (
@@ -175,7 +173,6 @@ if st.button("Buscar artículos"):
         mostrar_articulos_mas_citados(meta_df)
         mostrar_top_autores(meta_df)
         mostrar_top_instituciones(meta_df)
-        mostrar_top_citados(meta_df)
         mostrar_top_paises(meta_df)
         mostrar_red_coautoria(meta_df)
         mostrar_temas_frecuentes(meta_df)
