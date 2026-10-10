@@ -168,13 +168,12 @@ if st.button("Buscar artículos"):
             plt.ylabel("Revista")
             st.pyplot(plt)
 
-        # 🔹 2. Gráfico de dispersión (impacto vs. año)
-        st.subheader("Relación entre citas y año de publicación")
-        if not meta_df["Year"].isnull().all() and not meta_df["Cited by"].isnull().all():
-            plt.figure(figsize=(8,4))
-            sns.scatterplot(x="Year", y="Cited by", data=meta_df, hue="Year", palette="viridis", alpha=0.7)
-            plt.title("Impacto de publicaciones por año")
-            st.pyplot(plt)
+        # 🔹 2. Gráfico (impacto vs. año)
+        impact_by_year=(meta_df.groupby("Year")["Cited by"].mean().reset.index())
+        plt.figure(figsize=(10,5))
+        sns.barplot(data=impact_by_year,x="Año",y="Citas")
+        plt.xticks(rotation=45)
+        st.pyplot(plt)
 
         # 🔹 3. Treemap de conceptos (optimizado para evitar empalmes)
         import squarify
