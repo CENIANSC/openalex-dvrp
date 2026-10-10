@@ -22,6 +22,14 @@ from modules.institutions import (
     mostrar_top_paises
 )
 
+from modules.concepts import (
+    mostrar_nube_conceptos,
+    mostrar_treemap_conceptos,
+    mostrar_coocurrencia_conceptos
+)
+
+
+
 # Función auxiliar para reconstruir el abstract
 def reconstruir_abstract(abstract_inverted_index):
     if not abstract_inverted_index:
@@ -148,16 +156,6 @@ if st.button("Buscar artículos"):
             plt.xticks(rotation=45)
             st.pyplot(plt)
 
-        # Nube de palabras de conceptos
-        st.subheader("Nube de palabras de Conceptos")
-        all_concepts = " ".join(meta_df["Concepts"].dropna())
-        if all_concepts.strip():
-            wordcloud = WordCloud(width=800, height=400, background_color="white").generate(all_concepts)
-            plt.figure(figsize=(10,5))
-            plt.imshow(wordcloud, interpolation="bilinear")
-            plt.axis("off")
-            st.pyplot(plt)
-
         # 🔹 1. Distribución por revista
         st.subheader("Revistas más frecuentes")
         if not meta_df["Journal"].isnull().all():
@@ -180,42 +178,7 @@ if st.button("Buscar artículos"):
         plt.xticks(rotation=45)
         st.pyplot(plt)
 
-        # 🔹 3. Treemap de conceptos (optimizado para evitar empalmes)
-        import squarify
-        st.subheader("Treemap de conceptos más frecuentes")
 
-        concept_counts = meta_df["Concepts"].str.split("; ").explode().value_counts().head(20)
-        if not concept_counts.empty:
-            labels = [
-                f"{name[:25]}...\n({count})" if len(name) > 25 else f"{name}\n({count})"
-                for name, count in zip(concept_counts.index, concept_counts.values)
-            ]
-            plt.figure(figsize=(12,7))
-            squarify.plot(sizes=concept_counts.values, label=labels, alpha=0.8, text_kwargs={'fontsize':8})
-            plt.axis("off")
-            st.pyplot(plt)
-        else:
-            st.info("No hay suficientes conceptos para generar el treemap.")
-
-        # 🔹 4. Heatmap de coocurrencia de conceptos
-        st.subheader("Coocurrencia de conceptos")
-        from itertools import combinations
-        concept_pairs = []
-        for concepts in meta_df["Concepts"].dropna():
-            items = [c.strip() for c in concepts.split(";") if c.strip()]
-            for pair in combinations(items, 2):
-                concept_pairs.append(tuple(sorted(pair)))
-
-        if concept_pairs:
-            pair_df = pd.DataFrame(concept_pairs, columns=["Concept1", "Concept2"])
-            pair_counts = pair_df.value_counts().reset_index(name="Count")
-            heatmap_df = pair_counts.pivot_table(index="Concept1", columns="Concept2", values="Count", fill_value=0)
-
-            plt.figure(figsize=(10,8))
-            sns.heatmap(heatmap_df, cmap="YlGnBu")
-            st.pyplot(plt)
-        else:
-            st.info("No hay suficientes conceptos para generar el heatmap.")
 
     
         mostrar_indicadores(meta_df)
@@ -227,6 +190,9 @@ if st.button("Buscar artículos"):
         mostrar_top_paises(meta_df)
         mostrar_red_coautoria(meta_df)
         mostrar_temas_emergentes(meta_df)
+        mostrar_nube_conceptos(meta_df)
+        mostrar_treemap_conceptos(meta_df)
+        mostrar_concurrencia_conceptos(meta_df)
         
         # Botón para descargar Excel
         output_file = "openalex_metadata.xlsx"
