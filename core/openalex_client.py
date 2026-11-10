@@ -9,11 +9,11 @@ class OpenAlexError(Exception):
 
 def buscar_publicaciones(api_key, consulta, anio_inicial=None, anio_final=None,
                          solo_oa=False, solo_pdf=False, tipo="article", limite=500,
-                         tema_id=None, progreso=None):
+                         tema_id=None, progreso=None, pais=None, institucion_id=None, topic_mode="primary", temas_ids=None):
     if not api_key:
         raise OpenAlexError("Falta OPENALEX_API_KEY en los Secrets de Streamlit.")
-    if not consulta or not consulta.strip():
-        raise OpenAlexError("Escribe un término de búsqueda.")
+    if not (consulta and consulta.strip()) and not (tema_id or temas_ids):
+        raise OpenAlexError("Escribe términos o selecciona al menos un tema.")
     if anio_inicial and anio_final and anio_inicial > anio_final:
         raise OpenAlexError("El año inicial no puede superar el final.")
     filtros = []
@@ -29,14 +29,22 @@ def buscar_publicaciones(api_key, consulta, anio_inicial=None, anio_final=None,
         filtros.append("has_content.pdf:true")
     if tipo != "Todos":
         filtros.append(f"type:{tipo}")
-    if tema_id:
-        filtros.append(f"primary_topic.id:{tema_id}")
+    topic_list = temas_ids or ([tema_id] if tema_id else [])
+    topic_list = [str(t).strip().rsplit("/", 1)[-1] for t in topic_list if str(t).strip()]
+    if topic_list:
+        campo = "topics.id" if topic_mode == "any" else "primary_topic.id"
+        filtros.append(f"{campo}:{'|'.join(topic_list)}")
+    if pais:
+        filtros.append(f"authorships.countries:{pais.upper()}")
+    if institucion_id:
+        filtros.append(f"institutions.id:{institucion_id.strip().rsplit('/', 1)[-1]}")
     params = {
         "api_key": api_key,
-        "search.title_and_abstract": consulta.strip(),
         "per_page": min(200, limite),
         "cursor": "*",
     }
+    if consulta and consulta.strip():
+        params["search.title_and_abstract"] = consulta.strip()
     if filtros:
         params["filter"] = ",".join(filtros)
     resultados = []
