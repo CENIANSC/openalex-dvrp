@@ -62,7 +62,7 @@ def normalizar(trabajos):
         })
     return pd.DataFrame(filas)
 
-st.title("OpenAlex-DVRP 2.2 Beta")
+st.title("Análisis con OpenAlex")
 
 st.caption(
     "Explorador y análisis bibliométrico de publicaciones indexadas en OpenAlex"
@@ -75,6 +75,7 @@ UPAEP
 """)
 
 st.subheader("Explorador de temas OpenAlex")
+selected_topics = []
 with st.form("busqueda"):
     consulta = st.text_input("Términos de búsqueda en título y resumen")
     c1, c2, c3 = st.columns(3)
