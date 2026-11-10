@@ -30,6 +30,7 @@ def limpiar_para_excel(valor):
         )
     return valor
 
+
 def reconstruir_abstract(indice):
     if not indice:
         return ""
@@ -165,7 +166,7 @@ if "resultados_v2" in st.session_state:
         with pd.ExcelWriter(excel, engine="openpyxl") as writer:
             df_excel = df.map(limpiar_para_excel)
             df_excel.to_excel(writer, sheet_name="Publicaciones", index=False)   
-            pd.DataFrame([metodo]).map(limpiar_para_excel).to_excel(writer, sheet_name="Metodologia", index=False)
+        pd.DataFrame(metodo).map(limpiar_para_excel).to_excel(writer, sheet_name="Metodologia", index=False)
         st.download_button("Descargar Excel y metodología", excel.getvalue(), file_name="openalex_dvrp_v2.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         st.download_button("Descargar registros CSV (UTF-8)", df.to_csv(index=False).encode("utf-8-sig"), file_name="openalex_dvrp_2_2.csv", mime="text/csv")
         st.download_button("Descargar manifiesto reproducible JSON", manifest_bytes(metodo, df), file_name="manifiesto_openalex_2_2.json", mime="application/json")
