@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import networkx as nx
@@ -7,62 +8,53 @@ from itertools import combinations
 
 def mostrar_metricas_red_institucional(meta_df):
 
-    st.subheader(
-        "Métricas de colaboración institucional"
-    )
+    st.subheader("Métricas de colaboración institucional")
+
+    if meta_df is None or "Institutions" not in meta_df.columns:
+        st.warning("No se encontraron datos de instituciones.")
+        return
 
     G = nx.Graph()
 
     for institutions in meta_df["Institutions"].dropna():
 
+        if not isinstance(institutions, str):
+            continue
+
         inst_list = list(
-            set(
+            dict.fromkeys(
                 i.strip()
                 for i in institutions.split(";")
                 if i.strip()
             )
         )
 
-        for pair in combinations(
-            inst_list,
-            2
-        ):
+        G.add_nodes_from(inst_list)
 
-            if G.has_edge(*pair):
+        for inst1, inst2 in combinations(inst_list, 2):
 
-                G[pair[0]][pair[1]][
-                    "weight"
-                ] += 1
+            if G.has_edge(inst1, inst2):
+                G[inst1][inst2]["weight"] += 1
+            else:
+                G.add_edge(inst1, inst2, weight=1)
 
-     *      else:
-
-                G.add*edge(
-                    pair[0],*                    pair[1],
-     *              weight=1
-           *    )
-
-    if G.number_of_nodes() *= 0:
-
-        st.info(
-           *"No existen instituciones suficien*es."
-        )
-
+    if G.number_of_nodes() == 0:
+        st.info("No existen instituciones suficientes para el análisis.")
         return
 
-  * col1, col2, col3 = st.columns(3)
-*    col1.metric(
-        "Instituc*ones",
-        G.number_of_nodes()*    )
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric(
+        "Instituciones",
+        G.number_of_nodes()
+    )
 
     col2.metric(
-        "C*laboraciones",
-        G.number_of*edges()
+        "Colaboraciones",
+        G.number_of_edges()
     )
 
     col3.metric(
-  *     "Densidad",
-        round(
-  *         nx.density(G),
-          * 4
-        )
+        "Densidad",
+        round(nx.density(G), 4)
     )
