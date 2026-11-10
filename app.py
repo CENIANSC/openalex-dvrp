@@ -8,6 +8,7 @@ import streamlit as st
 
 from core.openalex_client import OpenAlexError, buscar_publicaciones
 from core.topics_client import search_topics
+from core.ui import install_style, sidebar, hero, section
 from analysis.comparative import compare_periods, compare_entities, international_collaboration
 from analysis.reproducibility import manifest_bytes
 from reports.research import research_docx, research_pdf
@@ -19,7 +20,9 @@ from modules.journals import mostrar_revistas_frecuentes, mostrar_publicaciones_
 from modules.topics import mostrar_temas_emergentes, mostrar_temas_frecuentes
 from modules.networks import mostrar_metricas_red_institucional
 
-st.set_page_config(page_title="OpenAlex-DVRP 2.4", layout="wide")
+st.set_page_config(page_title="OpenAlex-DVRP | Inteligencia científica", page_icon="🔬", layout="wide", initial_sidebar_state="expanded")
+install_style()
+sidebar()
 
 def limpiar_para_excel(valor):
     if isinstance(valor, str):
@@ -74,19 +77,8 @@ def normalizar(trabajos):
         })
     return pd.DataFrame(filas)
 
-st.title("Análisis con OpenAlex")
-
-st.caption(
-    "Explorador y análisis bibliométrico de publicaciones indexadas en OpenAlex"
-)
-
-st.caption("""
-**Daniel A. Aguirre Ibarra**  
-Doctorado en Logística y Dirección de la Cadena de Suministro  
-UPAEP
-""")
-
-st.header("Proyecto de investigación | Asistente metodológico 2.4")
+hero()
+section("protocolo", "Protocolo de investigación", "Documenta el propósito y los criterios de tu estudio antes de recuperar publicaciones.")
 with st.expander("Definir protocolo de investigación", expanded=False):
     st.text_input("Título del estudio", key="study_title", placeholder="Ej. Evolución de la investigación en logística sostenible")
     st.text_area("Pregunta de investigación", key="study_question")
@@ -95,7 +87,7 @@ with st.expander("Definir protocolo de investigación", expanded=False):
     st.text_area("Criterios de exclusión", key="study_exclusion", placeholder="Duplicados, documentos fuera del alcance, etc.")
     st.caption("Los criterios son documentales: la aplicación no excluye automáticamente publicaciones por estos textos. Registra manualmente las decisiones de cribado.")
 
-st.subheader("Explorador de temas OpenAlex")
+section("explorador", "Explorador de publicaciones", "Define la estrategia de búsqueda y los filtros de recuperación en OpenAlex.")
 selected_topics = []
 with st.form("busqueda"):
     consulta = st.text_input("Términos de búsqueda en título y resumen")
@@ -135,7 +127,7 @@ if enviar:
         barra.empty()
         st.session_state["resultados_v2"] = normalizar(trabajos)
         st.session_state["metodologia_v2"] = {
-            "plataforma": "OpenAlex-DVRP 2.4",
+            "plataforma": "OpenAlex-DVRP 2.5",
             "fuente": "OpenAlex API",
             "fecha_consulta_utc": datetime.now(timezone.utc).isoformat(),
             "terminos": consulta,
@@ -166,7 +158,7 @@ if enviar:
 if "resultados_v2" in st.session_state:
     df = st.session_state["resultados_v2"]
     metodo = st.session_state["metodologia_v2"]
-    st.subheader("Resultados de búsqueda")
+    section("resultados", "Panel de resultados", "Resumen del corpus recuperado en la consulta actual.")
     a, b = st.columns(2)
     a.metric("Resultados reportados por OpenAlex", f"{metodo['total_reportado_openalex'] or 0:,}")
     b.metric("Registros descargados", f"{len(df):,}")
@@ -185,7 +177,7 @@ if "resultados_v2" in st.session_state:
         st.download_button("Descargar registros CSV (UTF-8)", df.to_csv(index=False).encode("utf-8-sig"), file_name="openalex_dvrp_2_2.csv", mime="text/csv")
         st.download_button("Descargar manifiesto reproducible JSON", manifest_bytes(metodo, df), file_name="manifiesto_openalex_2_2.json", mime="application/json")
         st.download_button("Descargar metodología JSON", json.dumps(metodo, ensure_ascii=False, indent=2).encode("utf-8"), file_name="metodologia_openalex.json", mime="application/json")
-        st.subheader("Análisis bibliométrico")
+        section("bibliometria", "Análisis bibliométrico", "Indicadores, autores, instituciones, fuentes y relaciones del conjunto descargado.")
         analisis = [
             ("Publicaciones por año", mostrar_publicaciones_por_anio),
             ("Revistas frecuentes", mostrar_revistas_frecuentes),
@@ -221,7 +213,7 @@ if "resultados_v2" in st.session_state and not st.session_state["resultados_v2"]
     import matplotlib.pyplot as plt
 
     st.divider()
-    st.header("OpenAlex | Análisis avanzado")
+    section("avanzado", "Análisis avanzado", "Métricas, redes de colaboración, comparaciones, informes y auditoría.")
     tab_metrics, tab_network, tab_compare, tab_reports, tab_audit = st.tabs(["Bibliometría avanzada", "Redes interactivas", "Comparaciones", "Informes académicos", "Auditoría de datos"])
     with tab_metrics:
         summary = summarize(df)
@@ -296,7 +288,7 @@ if 'resultados_v2' in st.session_state and not st.session_state['resultados_v2']
     import networkx as nx
 
     st.divider()
-    st.header('OpenAlex | Inteligencia científica 2.3')
+    section("inteligencia", "Inteligencia científica", "Mapas de conocimiento, evolución temática y redes de referencias.")
     st.caption('Análisis exploratorios del subconjunto descargado. Los temas son etiquetas clasificadas por OpenAlex, no palabras clave declaradas por autores.')
     t_map, t_evo, t_cite, t_strategy, t_figures = st.tabs([
         'Mapa de conocimiento', 'Evolución temática', 'Redes de referencias',
@@ -417,7 +409,7 @@ if 'resultados_v2' in st.session_state and not st.session_state['resultados_v2']
 # OpenAlex-DVRP 2.4: protocolo, selección, calidad, informe y proyectos portables.
 from analysis.study_workflow import quality_table, selection_flow, project_bytes, read_project, study_report_docx, study_report_pdf
 st.divider()
-st.header("OpenAlex | Proyectos y validación científica 2.4")
+section("proyectos", "Proyectos e informes", "Recupera estudios, revisa calidad documental y exporta informes académicos.")
 with st.expander("Recuperar un proyecto guardado (JSON)"):
     uploaded_project = st.file_uploader("Archivo de proyecto 2.4", type=["json"], key="project_upload")
     if uploaded_project is not None and st.button("Cargar proyecto", key="load_project"):
