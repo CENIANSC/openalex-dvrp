@@ -58,8 +58,12 @@ def normalizar(trabajos):
         })
     return pd.DataFrame(filas)
 
-st.title("OpenAlex-DVRP 2.0 Beta")
-st.caption("Explorador y análisis bibliométrico de publicaciones indexadas en OpenAlex")
+st.title("Explorador y análisis en OpenAlex")
+st.caption("""
+**Daniel A. Aguirre Ibarra**  
+Doctorado en Logística y Dirección de la Cadena de Suministro  
+UPAEP
+""")
 with st.form("busqueda"):
     consulta = st.text_input("Términos de búsqueda en título y resumen")
     c1, c2, c3 = st.columns(3)
