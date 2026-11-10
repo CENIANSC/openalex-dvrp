@@ -19,7 +19,7 @@ from modules.journals import mostrar_revistas_frecuentes, mostrar_publicaciones_
 from modules.topics import mostrar_temas_emergentes, mostrar_temas_frecuentes
 from modules.networks import mostrar_metricas_red_institucional
 
-st.set_page_config(page_title="OpenAlex-DVRP 2.3", layout="wide")
+st.set_page_config(page_title="OpenAlex-DVRP 2.4", layout="wide")
 
 def limpiar_para_excel(valor):
     if isinstance(valor, str):
@@ -86,6 +86,15 @@ Doctorado en Logística y Dirección de la Cadena de Suministro
 UPAEP
 """)
 
+st.header("Proyecto de investigación | Asistente metodológico 2.4")
+with st.expander("Definir protocolo de investigación", expanded=False):
+    st.text_input("Título del estudio", key="study_title", placeholder="Ej. Evolución de la investigación en logística sostenible")
+    st.text_area("Pregunta de investigación", key="study_question")
+    st.text_area("Objetivo del estudio", key="study_objective")
+    st.text_area("Criterios de inclusión", key="study_inclusion", placeholder="Años, idiomas, tipos documentales y pertinencia temática")
+    st.text_area("Criterios de exclusión", key="study_exclusion", placeholder="Duplicados, documentos fuera del alcance, etc.")
+    st.caption("Los criterios son documentales: la aplicación no excluye automáticamente publicaciones por estos textos. Registra manualmente las decisiones de cribado.")
+
 st.subheader("Explorador de temas OpenAlex")
 selected_topics = []
 with st.form("busqueda"):
@@ -126,7 +135,7 @@ if enviar:
         barra.empty()
         st.session_state["resultados_v2"] = normalizar(trabajos)
         st.session_state["metodologia_v2"] = {
-            "plataforma": "OpenAlex-DVRP 2.3",
+            "plataforma": "OpenAlex-DVRP 2.4",
             "fuente": "OpenAlex API",
             "fecha_consulta_utc": datetime.now(timezone.utc).isoformat(),
             "terminos": consulta,
@@ -142,7 +151,12 @@ if enviar:
             "limite_solicitado": limite,
             "total_reportado_openalex": total,
             "registros_descargados": len(trabajos),
-            "advertencia": "Los indicadores se calculan sobre los registros descargados, no necesariamente sobre todo el universo encontrado."
+            "advertencia": "Los indicadores se calculan sobre los registros descargados, no necesariamente sobre todo el universo encontrado.",
+            "titulo_estudio": st.session_state.get("study_title", ""),
+            "pregunta_investigacion": st.session_state.get("study_question", ""),
+            "objetivo_estudio": st.session_state.get("study_objective", ""),
+            "criterios_inclusion": st.session_state.get("study_inclusion", ""),
+            "criterios_exclusion": st.session_state.get("study_exclusion", "")
         }
     except OpenAlexError as exc:
         st.error(str(exc))
@@ -166,7 +180,7 @@ if "resultados_v2" in st.session_state:
         with pd.ExcelWriter(excel, engine="openpyxl") as writer:
             df_excel = df.map(limpiar_para_excel)
             df_excel.to_excel(writer, sheet_name="Publicaciones", index=False)   
-        pd.DataFrame(metodo).map(limpiar_para_excel).to_excel(writer, sheet_name="Metodologia", index=False)
+            pd.DataFrame([metodo]).astype(str).map(limpiar_para_excel).to_excel(writer, sheet_name="Metodologia", index=False)
         st.download_button("Descargar Excel y metodología", excel.getvalue(), file_name="openalex_dvrp_v2.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         st.download_button("Descargar registros CSV (UTF-8)", df.to_csv(index=False).encode("utf-8-sig"), file_name="openalex_dvrp_2_2.csv", mime="text/csv")
         st.download_button("Descargar manifiesto reproducible JSON", manifest_bytes(metodo, df), file_name="manifiesto_openalex_2_2.json", mime="application/json")
@@ -398,3 +412,58 @@ if 'resultados_v2' in st.session_state and not st.session_state['resultados_v2']
                            science_pdf(summary23, metodo, annual23, topic_stats, emerging, strategic),
                            'informe_cientifico_openalex_23.pdf', mime='application/pdf')
         st.caption('Las figuras pueden descargarse en PNG y SVG desde las pestañas anteriores. El informe es descriptivo y requiere interpretación y revisión del investigador.')
+
+
+# OpenAlex-DVRP 2.4: protocolo, selección, calidad, informe y proyectos portables.
+from analysis.study_workflow import quality_table, selection_flow, project_bytes, read_project, study_report_docx, study_report_pdf
+st.divider()
+st.header("OpenAlex | Proyectos y validación científica 2.4")
+with st.expander("Recuperar un proyecto guardado (JSON)"):
+    uploaded_project = st.file_uploader("Archivo de proyecto 2.4", type=["json"], key="project_upload")
+    if uploaded_project is not None and st.button("Cargar proyecto", key="load_project"):
+        try:
+            restored_df, restored_method, restored_flow = read_project(uploaded_project.getvalue())
+            st.session_state["resultados_v2"] = restored_df
+            st.session_state["metodologia_v2"] = restored_method
+            st.session_state["selection_24"] = restored_flow
+            st.success("Proyecto recuperado. Se restauraron registros, metodología y selección; las visualizaciones se recalcularán.")
+            st.rerun()
+        except (ValueError, KeyError, TypeError) as exc:
+            st.error(f"No fue posible cargar el proyecto: {exc}")
+if "resultados_v2" in st.session_state:
+    current_df = st.session_state["resultados_v2"]
+    current_method = st.session_state["metodologia_v2"]
+    t_protocol, t_selection, t_quality, t_article, t_save = st.tabs([
+        "Protocolo", "Selección documental", "Calidad de metadatos", "Informe científico 2.4", "Guardar proyecto"])
+    with t_protocol:
+        st.json({k: current_method.get(k, "") for k in ["titulo_estudio", "pregunta_investigacion", "objetivo_estudio", "criterios_inclusion", "criterios_exclusion", "filtros", "fecha_consulta_utc", "registros_descargados", "total_reportado_openalex"]})
+        st.caption("Documentar una estrategia no implica que se hayan aplicado criterios de elegibilidad manuales.")
+    with t_selection:
+        st.caption("Flujo descriptivo de selección. No debe presentarse como PRISMA 2020 completo sin documentar todas las fuentes, fases y motivos de exclusión.")
+        identified = int(current_method.get("total_reportado_openalex") or len(current_df))
+        downloaded = len(current_df)
+        duplicates = int(current_df["OpenAlex ID"].duplicated().sum()) if "OpenAlex ID" in current_df else 0
+        max_screen = max(0, downloaded - duplicates)
+        defaults = st.session_state.get("selection_24", {})
+        screened = st.number_input("Registros examinados manualmente", min_value=0, max_value=max_screen, value=min(max_screen, int(defaults.get("screened", 0))), key="screened_24")
+        excluded = st.number_input("Registros excluidos durante el cribado", min_value=0, max_value=int(screened), value=min(int(screened), int(defaults.get("excluded", 0))), key="excluded_24")
+        included = int(screened) - int(excluded)
+        st.session_state["selection_24"] = {"screened": int(screened), "excluded": int(excluded)}
+        flow_df = selection_flow(identified, downloaded, duplicates, int(screened), int(excluded))
+        st.dataframe(flow_df, hide_index=True, use_container_width=True)
+        st.metric("Registros incluidos tras cribado", included)
+        st.download_button("Descargar flujo CSV", flow_df.to_csv(index=False).encode("utf-8-sig"), "seleccion_documental_2_4.csv", mime="text/csv")
+    with t_quality:
+        quality = quality_table(current_df)
+        st.dataframe(quality, hide_index=True, use_container_width=True)
+        st.download_button("Descargar auditoría CSV", quality.to_csv(index=False).encode("utf-8-sig"), "calidad_metadatos_2_4.csv", mime="text/csv")
+        st.caption("La disponibilidad de referencias y resúmenes varía por fuente; los datos faltantes no implican necesariamente registros inválidos.")
+    with t_article:
+        st.caption("Documento estructurado de apoyo, no un artículo validado ni una discusión científica generada automáticamente.")
+        flow_data = st.session_state.get("selection_24", {"screened": 0, "excluded": 0})
+        st.download_button("Descargar borrador académico Word 2.4", study_report_docx(current_df, current_method, flow_data), "borrador_openalex_2_4.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+        st.download_button("Descargar borrador académico PDF 2.4", study_report_pdf(current_df, current_method, flow_data), "borrador_openalex_2_4.pdf", mime="application/pdf")
+    with t_save:
+        st.write("Guarda un archivo JSON portable con los registros, protocolo y cifras de selección. No incluye credenciales.")
+        st.download_button("Guardar proyecto completo JSON", project_bytes(current_df, current_method, st.session_state.get("selection_24", {})), "proyecto_openalex_dvrp_2_4.json", mime="application/json")
+        st.warning("Los proyectos se descargan a tu equipo; Streamlit Cloud no conserva automáticamente tus estudios entre sesiones. Evita compartir proyectos que contengan información sensible.")
