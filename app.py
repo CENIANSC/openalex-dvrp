@@ -1,5 +1,6 @@
 import io
 import json
+import re
 from datetime import datetime, timezone
 
 import pandas as pd
@@ -19,6 +20,15 @@ from modules.topics import mostrar_temas_emergentes, mostrar_temas_frecuentes
 from modules.networks import mostrar_metricas_red_institucional
 
 st.set_page_config(page_title="OpenAlex-DVRP 2.2", layout="wide")
+
+def limpiar_para_excel(valor):
+    if isinstance(valor, str):
+        return re.sub(
+            r"[\x00-\x08\x0B\x0C\x0E-\x1F]",
+            "",
+            valor
+        )
+    return valor
 
 def reconstruir_abstract(indice):
     if not indice:
@@ -152,7 +162,8 @@ if "resultados_v2" in st.session_state:
         st.dataframe(df, use_container_width=True)
         excel = io.BytesIO()
         with pd.ExcelWriter(excel, engine="openpyxl") as writer:
-            df.to_excel(writer, sheet_name="Publicaciones", index=False)
+            df_excel = df.map(limpiar_para_excel)
+            df_excel.to_excel(writer, sheet_name="Publicaciones", index=False)   
             pd.DataFrame([metodo]).to_excel(writer, sheet_name="Metodologia", index=False)
         st.download_button("Descargar Excel y metodología", excel.getvalue(), file_name="openalex_dvrp_v2.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         st.download_button("Descargar registros CSV (UTF-8)", df.to_csv(index=False).encode("utf-8-sig"), file_name="openalex_dvrp_2_2.csv", mime="text/csv")
@@ -194,7 +205,7 @@ if "resultados_v2" in st.session_state and not st.session_state["resultados_v2"]
     import matplotlib.pyplot as plt
 
     st.divider()
-    st.header("OpenAlex-DVRP 2.2 | Análisis avanzado")
+    st.header("OpenAlex | Análisis avanzado")
     tab_metrics, tab_network, tab_compare, tab_reports, tab_audit = st.tabs(["Bibliometría avanzada", "Redes interactivas", "Comparaciones", "Informes académicos", "Auditoría de datos"])
     with tab_metrics:
         summary = summarize(df)
