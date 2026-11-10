@@ -75,6 +75,7 @@ end_year = st.number_input("Año final", min_value=1900, max_value=2100, value=N
 
 if st.button("Buscar artículos"):
     base_url = "https://api.openalex.org/works"
+    api_key = st.secrets["OPENALEX_API_KEY"]
     headers = {"Authorization": ""}
     params = {
         "sort": "relevance_score:desc",
