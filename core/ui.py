@@ -62,7 +62,7 @@ def sidebar():
 
 def hero():
     st.markdown('''<div id="inicio" class="dvrp-hero">
-<div class="dvrp-kicker">Plataforma de investigación · Versión 2.5</div>
+<div class="dvrp-kicker">Inteligencia científica  · Versión 2.5</div>
 <h1>OpenAlex Analítica</h1>
 <p>Exploración, análisis bibliométrico e inteligencia científica de publicaciones indexadas en OpenAlex.</p>
 <div class="dvrp-credit"><strong>Daniel A. Aguirre Ibarra</strong><br>Doctorado en Logística y Dirección de la Cadena de Suministro<br>UPAEP</div>
