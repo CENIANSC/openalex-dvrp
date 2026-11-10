@@ -44,7 +44,7 @@ def install_style():
 
 def sidebar():
     with st.sidebar:
-        st.markdown('<div class="dvrp-brand">◈ OpenAlex-DVRP</div><div class="dvrp-sidecaption">Inteligencia científica · v2.5</div>', unsafe_allow_html=True)
+        st.markdown('<div class="dvrp-brand">◈ OpenAlex Analítica</div><div class="dvrp-sidecaption">Inteligencia científica · v2.5</div>', unsafe_allow_html=True)
         st.markdown('''<div class="dvrp-nav-title">Espacios de trabajo</div><nav class="dvrp-nav">
 <a href="#inicio">⌂ &nbsp; Inicio</a>
 <a href="#protocolo">▤ &nbsp; Protocolo</a>
@@ -63,7 +63,7 @@ def sidebar():
 def hero():
     st.markdown('''<div id="inicio" class="dvrp-hero">
 <div class="dvrp-kicker">Plataforma de investigación · Versión 2.5</div>
-<h1>OpenAlex-DVRP</h1>
+<h1>OpenAlex Analítica</h1>
 <p>Exploración, análisis bibliométrico e inteligencia científica de publicaciones indexadas en OpenAlex.</p>
 <div class="dvrp-credit"><strong>Daniel A. Aguirre Ibarra</strong><br>Doctorado en Logística y Dirección de la Cadena de Suministro<br>UPAEP</div>
 </div>''', unsafe_allow_html=True)
