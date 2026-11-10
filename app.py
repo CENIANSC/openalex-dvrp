@@ -1,5 +1,6 @@
 import io
 import json
+import re
 from datetime import datetime, timezone
 
 import pandas as pd
@@ -18,7 +19,16 @@ from modules.journals import mostrar_revistas_frecuentes, mostrar_publicaciones_
 from modules.topics import mostrar_temas_emergentes, mostrar_temas_frecuentes
 from modules.networks import mostrar_metricas_red_institucional
 
-st.set_page_config(page_title="OpenAlex-DVRP 2.2", layout="wide")
+st.set_page_config(page_title="OpenAlex-DVRP 2.3", layout="wide")
+
+def limpiar_para_excel(valor):
+    if isinstance(valor, str):
+        return re.sub(
+            r"[\x00-\x08\x0B\x0C\x0E-\x1F]",
+            "",
+            valor
+        )
+    return valor
 
 def reconstruir_abstract(indice):
     if not indice:
@@ -59,10 +69,11 @@ def normalizar(trabajos):
             "DOI": work.get("doi"),
             "Author IDs": nombres_unicos([(a.get("author") or {}).get("id") for a in autorias]),
             "Institution IDs": nombres_unicos([i.get("id") for i in instituciones]),
+            "Referenced works": nombres_unicos(work.get("referenced_works") or []),
         })
     return pd.DataFrame(filas)
 
-st.title("OpenAlex-DVRP 2.2 Beta")
+st.title("Análisis con OpenAlex")
 
 st.caption(
     "Explorador y análisis bibliométrico de publicaciones indexadas en OpenAlex"
@@ -75,6 +86,7 @@ UPAEP
 """)
 
 st.subheader("Explorador de temas OpenAlex")
+selected_topics = []
 with st.form("busqueda"):
     consulta = st.text_input("Términos de búsqueda en título y resumen")
     c1, c2, c3 = st.columns(3)
@@ -113,7 +125,7 @@ if enviar:
         barra.empty()
         st.session_state["resultados_v2"] = normalizar(trabajos)
         st.session_state["metodologia_v2"] = {
-            "plataforma": "OpenAlex-DVRP 2.2 Beta",
+            "plataforma": "OpenAlex-DVRP 2.3",
             "fuente": "OpenAlex API",
             "fecha_consulta_utc": datetime.now(timezone.utc).isoformat(),
             "terminos": consulta,
@@ -151,8 +163,9 @@ if "resultados_v2" in st.session_state:
         st.dataframe(df, use_container_width=True)
         excel = io.BytesIO()
         with pd.ExcelWriter(excel, engine="openpyxl") as writer:
-            df.to_excel(writer, sheet_name="Publicaciones", index=False)
-            pd.DataFrame([metodo]).to_excel(writer, sheet_name="Metodologia", index=False)
+            df_excel = df.map(limpiar_para_excel)
+            df_excel.to_excel(writer, sheet_name="Publicaciones", index=False)   
+            pd.DataFrame([metodo]).map(limpiar_para_excel).to_excel(writer, sheet_name="Metodologia", index=False)
         st.download_button("Descargar Excel y metodología", excel.getvalue(), file_name="openalex_dvrp_v2.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         st.download_button("Descargar registros CSV (UTF-8)", df.to_csv(index=False).encode("utf-8-sig"), file_name="openalex_dvrp_2_2.csv", mime="text/csv")
         st.download_button("Descargar manifiesto reproducible JSON", manifest_bytes(metodo, df), file_name="manifiesto_openalex_2_2.json", mime="application/json")
@@ -193,7 +206,7 @@ if "resultados_v2" in st.session_state and not st.session_state["resultados_v2"]
     import matplotlib.pyplot as plt
 
     st.divider()
-    st.header("OpenAlex-DVRP 2.2 | Análisis avanzado")
+    st.header("OpenAlex | Análisis avanzado")
     tab_metrics, tab_network, tab_compare, tab_reports, tab_audit = st.tabs(["Bibliometría avanzada", "Redes interactivas", "Comparaciones", "Informes académicos", "Auditoría de datos"])
     with tab_metrics:
         summary = summarize(df)
@@ -259,3 +272,128 @@ if "resultados_v2" in st.session_state and not st.session_state["resultados_v2"]
         st.dataframe(pd.DataFrame(checks.items(),columns=["Comprobación","Valor"]),hide_index=True)
         st.json(metodo)
         st.info("La auditoría automática detecta incidencias básicas; no equivale a una validación científica completa de los registros.")
+
+# OpenAlex-DVRP 2.3: análisis de estructura y evolución del conocimiento.
+if 'resultados_v2' in st.session_state and not st.session_state['resultados_v2'].empty:
+    from analysis.science_mapping import (topic_network, topic_table, thematic_evolution,
+        emerging_topics, strategic_map, reference_network, edge_table)
+    import matplotlib.pyplot as plt
+    import networkx as nx
+
+    st.divider()
+    st.header('OpenAlex | Inteligencia científica 2.3')
+    st.caption('Análisis exploratorios del subconjunto descargado. Los temas son etiquetas clasificadas por OpenAlex, no palabras clave declaradas por autores.')
+    t_map, t_evo, t_cite, t_strategy, t_figures = st.tabs([
+        'Mapa de conocimiento', 'Evolución temática', 'Redes de referencias',
+        'Mapa estratégico', 'Figuras e informe 2.3'])
+
+    def draw_science_graph(graph, limit=45):
+        fig, ax = plt.subplots(figsize=(11, 7))
+        if graph.number_of_nodes():
+            ranking = sorted(graph, key=lambda n: graph.degree(n), reverse=True)[:limit]
+            sub = graph.subgraph(ranking)
+            pos = nx.spring_layout(sub, seed=42, weight='weight')
+            nx.draw_networkx(sub, pos, ax=ax, node_size=210, font_size=6,
+                             labels={n: str(n).rsplit('/', 1)[-1][:23] for n in sub},
+                             width=.65, alpha=.85, arrows=sub.is_directed())
+        ax.axis('off')
+        fig.tight_layout()
+        return fig
+
+    def figure_download(fig, basename):
+        image = io.BytesIO()
+        fig.savefig(image, format='png', dpi=240, bbox_inches='tight')
+        st.download_button('Descargar figura PNG (240 dpi)', image.getvalue(),
+                           file_name=f'{basename}.png', mime='image/png', key=f'png_{basename}')
+        vector = io.BytesIO()
+        fig.savefig(vector, format='svg', bbox_inches='tight')
+        st.download_button('Descargar figura SVG (vectorial)', vector.getvalue(),
+                           file_name=f'{basename}.svg', mime='image/svg+xml', key=f'svg_{basename}')
+
+    with t_map:
+        min_count = st.slider('Publicaciones mínimas por tema', 1, 20, 2)
+        graph_topics = topic_network(df, min_count)
+        topic_stats = topic_table(graph_topics)
+        st.metric('Temas representados', graph_topics.number_of_nodes())
+        st.dataframe(topic_stats, hide_index=True, use_container_width=True)
+        st.download_button('Exportar temas y comunidades CSV', topic_stats.to_csv(index=False).encode('utf-8-sig'),
+                           'mapa_temas_23.csv', mime='text/csv')
+        st.download_button('Exportar relaciones temáticas CSV', edge_table(graph_topics).to_csv(index=False).encode('utf-8-sig'),
+                           'relaciones_temas_23.csv', mime='text/csv')
+        if graph_topics.number_of_nodes():
+            fig = draw_science_graph(graph_topics)
+            st.pyplot(fig)
+            figure_download(fig, 'red_tematica_23')
+            plt.close(fig)
+
+    with t_evo:
+        periods = st.slider('Número aproximado de periodos', 2, 6, 3)
+        evolution = thematic_evolution(df, periods)
+        st.dataframe(evolution, hide_index=True, use_container_width=True)
+        if not evolution.empty:
+            pivot = evolution.pivot_table(index='Periodo', columns='Tema', values='Publicaciones', fill_value=0)
+            st.area_chart(pivot)
+        st.download_button('Exportar evolución CSV', evolution.to_csv(index=False).encode('utf-8-sig'),
+                           'evolucion_tematica_23.csv', mime='text/csv')
+        emerging = emerging_topics(df)
+        st.subheader('Variación reciente de la presencia temática')
+        st.caption('Diferencia en puntos porcentuales entre la proporción de publicaciones con cada tema en el periodo reciente y anterior. No es una predicción ni una prueba estadística.')
+        st.dataframe(emerging, hide_index=True, use_container_width=True)
+        st.download_button('Exportar tendencias CSV', emerging.to_csv(index=False).encode('utf-8-sig'),
+                           'tendencias_temas_23.csv', mime='text/csv')
+
+    with t_cite:
+        mode_label = st.selectbox('Tipo de relación', ['Acoplamiento bibliográfico', 'Citación directa (dentro del corpus)', 'Cocitación de referencias'])
+        mode = {'Acoplamiento bibliográfico': 'coupling', 'Citación directa (dentro del corpus)': 'citation',
+                'Cocitación de referencias': 'cocitation'}[mode_label]
+        shared = st.slider('Mínimo de referencias compartidas / cocitaciones', 1, 10, 2,
+                           disabled=mode == 'citation')
+        graph_refs = reference_network(df, mode=mode, min_shared=shared, max_works=100 if mode == 'cocitation' else 300)
+        st.caption('Se utilizan como máximo los primeros 300 documentos descargados (100 para cocitación, con hasta 50 referencias por documento). La red de citación directa solo conecta documentos presentes en ese subconjunto; los nodos de cocitación representan referencias, no necesariamente documentos recuperados.')
+        x, y = st.columns(2)
+        x.metric('Nodos', graph_refs.number_of_nodes())
+        y.metric('Relaciones', graph_refs.number_of_edges())
+        ref_edges = edge_table(graph_refs)
+        st.dataframe(ref_edges.head(300), hide_index=True, use_container_width=True)
+        st.download_button('Exportar red de referencias CSV', ref_edges.to_csv(index=False).encode('utf-8-sig'),
+                           'referencias_red_23.csv', mime='text/csv')
+        if graph_refs.number_of_nodes() and graph_refs.number_of_edges():
+            fig = draw_science_graph(graph_refs)
+            st.pyplot(fig)
+            figure_download(fig, 'red_referencias_23')
+            plt.close(fig)
+        elif 'Referenced works' not in df or not df['Referenced works'].fillna('').str.strip().any():
+            st.warning('Este conjunto no contiene referencias bibliográficas recuperadas. Ejecuta una nueva búsqueda con la versión 2.3.')
+
+    with t_strategy:
+        strategic = strategic_map(graph_topics)
+        st.dataframe(strategic, hide_index=True, use_container_width=True)
+        st.download_button('Exportar mapa estratégico CSV', strategic.to_csv(index=False).encode('utf-8-sig'),
+                           'mapa_estrategico_23.csv', mime='text/csv')
+        if not strategic.empty:
+            fig, ax = plt.subplots(figsize=(9, 6))
+            ax.scatter(strategic['Centralidad externa'], strategic['Densidad interna'], s=90)
+            for _, row in strategic.iterrows():
+                ax.annotate(str(row['Comunidad']), (row['Centralidad externa'], row['Densidad interna']), xytext=(4, 4), textcoords='offset points')
+            ax.axvline(strategic['Centralidad externa'].median(), linestyle='--', color='grey')
+            ax.axhline(strategic['Densidad interna'].median(), linestyle='--', color='grey')
+            ax.set_xlabel('Centralidad externa (peso de enlaces entre comunidades)')
+            ax.set_ylabel('Densidad interna ponderada')
+            ax.set_title('Mapa estratégico exploratorio de comunidades')
+            st.pyplot(fig)
+            figure_download(fig, 'mapa_estrategico_23')
+            plt.close(fig)
+        st.info('La etiqueta «emergente o declinante» describe un cuadrante de baja centralidad y densidad; para distinguir crecimiento de declive es necesario contrastar los periodos. Estas medidas no son índices de Callon.')
+
+    with t_figures:
+        from reports.science_report import science_docx, science_pdf
+        summary23 = summarize(df)
+        annual23 = yearly(df)
+        st.write('Informe complementario con indicadores, mapa temático, tendencias, comunidades y limitaciones metodológicas.')
+        st.download_button('Descargar informe científico Word 2.3',
+                           science_docx(summary23, metodo, annual23, topic_stats, emerging, strategic),
+                           'informe_cientifico_openalex_23.docx', mime='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        st.download_button('Descargar informe científico PDF 2.3',
+                           science_pdf(summary23, metodo, annual23, topic_stats, emerging, strategic),
+                           'informe_cientifico_openalex_23.pdf', mime='application/pdf')
+        st.caption('Las figuras pueden descargarse en PNG y SVG desde las pestañas anteriores. El informe es descriptivo y requiere interpretación y revisión del investigador.')
