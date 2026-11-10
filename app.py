@@ -20,7 +20,7 @@ from modules.journals import mostrar_revistas_frecuentes, mostrar_publicaciones_
 from modules.topics import mostrar_temas_emergentes, mostrar_temas_frecuentes
 from modules.networks import mostrar_metricas_red_institucional
 
-st.set_page_config(page_title="OpenAlex-DVRP | Inteligencia científica", page_icon="🔬", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="OpenAlex Analítica | Inteligencia científica", page_icon="🕸️", layout="wide", initial_sidebar_state="expanded")
 install_style()
 sidebar()
 
@@ -127,7 +127,7 @@ if enviar:
         barra.empty()
         st.session_state["resultados_v2"] = normalizar(trabajos)
         st.session_state["metodologia_v2"] = {
-            "plataforma": "OpenAlex-DVRP 2.5",
+            "plataforma": "OpenAlex-Analítica 2.5",
             "fuente": "OpenAlex API",
             "fecha_consulta_utc": datetime.now(timezone.utc).isoformat(),
             "terminos": consulta,
