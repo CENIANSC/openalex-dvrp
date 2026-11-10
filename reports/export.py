@@ -24,12 +24,12 @@ def create_docx(metrics, method, yearly):
 
 def create_pdf(metrics,method,yearly):
     out=io.BytesIO();doc=SimpleDocTemplate(out,pagesize=(595,842),rightMargin=40,leftMargin=40)
-    styles=getSampleStyleSheet();story=[Paragraph("OpenAlex-DVRP 2.1 - Informe bibliometrico",styles["Title"]),Spacer(1,15),Paragraph("Metodologia",styles["Heading2"])]
+    styles=getSampleStyleSheet();story=[Paragraph("OpenAlex-DVRP 2.1 - Informe bibliométrico",styles["Title"]),Spacer(1,15),Paragraph("Metodologia",styles["Heading2"])]
     for k,v in method.items():story.append(Paragraph(escape(f"{k}: {v}"),styles["BodyText"]))
     story.extend([Spacer(1,12),Paragraph("Indicadores del conjunto descargado",styles["Heading2"])])
     for k,v in metrics.items():story.append(Paragraph(escape(f"{k}: {v}"),styles["BodyText"]))
-    story.extend([Spacer(1,12),Paragraph("Produccion anual",styles["Heading2"])])
+    story.extend([Spacer(1,12),Paragraph("Producción anual",styles["Heading2"])])
     rows=[["Anio","Publicaciones","Citas"]]+[[str(int(r["Año"])),str(int(r["Publicaciones"])),str(int(r["Citas"]))] for _,r in yearly.iterrows()]
     table=Table(rows,repeatRows=1);table.setStyle(TableStyle([("BACKGROUND",(0,0),(-1,0),colors.lightgrey),("GRID",(0,0),(-1,-1),.4,colors.grey),("BOTTOMPADDING",(0,0),(-1,-1),6)]));story.append(table)
-    story.extend([Spacer(1,12),Paragraph("Limitaciones",styles["Heading2"]),Paragraph("Los indicadores corresponden a los registros descargados y pueden cambiar con la cobertura de OpenAlex. Los indices h y g se refieren al conjunto, no a los autores.",styles["BodyText"])])
+    story.extend([Spacer(1,12),Paragraph("Limitaciones",styles["Heading2"]),Paragraph("Los indicadores corresponden a los registros descargados y pueden cambiar con la cobertura de OpenAlex. Los índices h y g se refieren al conjunto, no a los autores.",styles["BodyText"])])
     doc.build(story);return out.getvalue()

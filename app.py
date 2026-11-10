@@ -63,18 +63,18 @@ def normalizar(trabajos):
     return pd.DataFrame(filas)
 
 st.title("OpenAlex-DVRP 2.2 Beta")
-st.caption("Explorador y análisis bibliométrico de publicaciones indexadas en OpenAlex")
+
+st.caption(
+    "Explorador y análisis bibliométrico de publicaciones indexadas en OpenAlex"
+)
+
+st.caption("""
+**Daniel A. Aguirre Ibarra**  
+Doctorado en Logística y Dirección de la Cadena de Suministro  
+UPAEP
+""")
+
 st.subheader("Explorador de temas OpenAlex")
-topic_query = st.text_input("Buscar temas por nombre (español o inglés)", key="topic_search_22")
-if st.button("Consultar temas", key="topic_lookup_22"):
-    try:
-        st.session_state["topics_22"] = search_topics(st.secrets.get("OPENALEX_API_KEY", ""), topic_query)
-    except OpenAlexError as exc:
-        st.error(str(exc))
-topic_results = st.session_state.get("topics_22", [])
-if topic_results:
-    st.dataframe(pd.DataFrame(topic_results).rename(columns={"id":"ID", "name":"Tema", "works_count":"Publicaciones", "field":"Campo", "subfield":"Subcampo"}), hide_index=True, use_container_width=True)
-selected_topics = st.multiselect("Seleccionar temas para filtrar publicaciones", options=[t["id"] for t in topic_results], format_func=lambda x: next((f'{t["name"]} ({x})' for t in topic_results if t["id"] == x), x))
 with st.form("busqueda"):
     consulta = st.text_input("Términos de búsqueda en título y resumen")
     c1, c2, c3 = st.columns(3)
